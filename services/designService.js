@@ -26,9 +26,9 @@ exports.getDesignsByDate = async (userId = null, targetDate) => {
       accessEndDate = addMonths(user.subscriptionStart, 1);
       accessLevel = 'all';
     } else {
-      // Registered but not subscribed users or expired subscription: access for the registration month
+      // Registered but not subscribed users or expired subscription: access for the current month
       accessStartDate = startOfMonth(today)
-      accessEndDate = endOfMonth(user.registrationDate);
+      accessEndDate = endOfMonth(today);
       accessLevel = 'monthly';
   }
 }
