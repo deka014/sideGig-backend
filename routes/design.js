@@ -4,6 +4,8 @@ const router = express.Router();
 const designService = require('../services/designService');
 const { verifyToken } = require('../middleware/authMiddleware');
 const jwt = require('jsonwebtoken');
+const Design = require('../models/Design');
+const { restart } = require('nodemon');
 
 // Endpoint to get designs for a specific date based on user access level
 router.get('/designs-by-date', async (req, res) => {
@@ -29,5 +31,22 @@ router.get('/designs-by-date', async (req, res) => {
     res.status(500).json({ message: error.message });
   }
 });
+
+// @route   POST /api/auth/designs
+// @desc    To (POST)add a new design in the DB
+// @access  Private
+router.post('/designs', async (req,res) =>{
+  const data = req.body;
+
+  try {
+    const response = await designService.addDesign(data)
+    res.status(201).json({success:true,message:'Resource created successfully',design:response})
+  } catch (error) {
+    console.log('error at Design.create()',error);
+    const statusCode = error.statusCode || 500;
+    res.status(statusCode).json({error})
+  }
+})
+
 
 module.exports = router;
