@@ -58,3 +58,30 @@ exports.getDesignsByDate = async (userId = null, targetDate) => {
 
   return { designs, accessLevel };
 };
+
+
+function validateDesignData(data) {
+  const {title,imageUrl,releaseDate,accessLevel,description} = data;
+
+  //validate fileds
+  if(!title || !imageUrl || !releaseDate) {
+    throw {message:'title, imageUrl, releaseDate are required',statusCode: 400}
+  }
+  if(typeof title !== 'string' || typeof imageUrl!== 'string' || !releaseDate instanceof Date || typeof accessLevel!== 'string' || typeof description!== 'string') {
+    throw {message:'Invalid field type!',statusCode: 400}
+  }
+}
+
+exports.addDesign = async (data) => {
+  validateDesignData(data) //validate the data
+  try{
+    return await Design.create(data)
+  } catch(error) {
+    //NOTE: function validateDesignData(data) already does the type and falsy validation but I'm adding the below check for other validation checks by the DB.
+    if(error.name === "ValidationError") {
+      const customErrorObject = {message:"Internal server error!",mongoDbResponse:error} 
+      throw customErrorObject;
+    }
+    throw error;
+  }
+}

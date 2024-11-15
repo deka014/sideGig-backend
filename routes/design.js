@@ -32,35 +32,19 @@ router.get('/designs-by-date', async (req, res) => {
   }
 });
 
-// @route   POST /api/auth/verify-otp
+// @route   POST /api/auth/designs
 // @desc    To (POST)add a new design in the DB
 // @access  Private
-router.post('/designs',verifyToken, async (req,res) =>{
-  const user = req.user;
-  console.log(user);
-  console.log('/design req body',req.body)
-  const {title,imageUrl,releaseDate,accessLevel,description} = req.body;
-
-  //validate fileds
-  if(!title || !imageUrl || !releaseDate) {
-    res.status(400).json({message:'title, imageUrl, releaseDate are required'});
-  }
-  if(typeof title !== 'string' || typeof imageUrl!== 'string' || !releaseDate instanceof Date || typeof accessLevel!== 'string' || typeof description!== 'string') {
-    res.status(400).json({message:"Invalid field type"})
-  }
+router.post('/designs', async (req,res) =>{
+  const data = req.body;
 
   try {
-    const response = await Design.create({
-      title,
-      imageUrl,
-      releaseDate,
-      accessLevel,
-      description
-    })
+    const response = await designService.addDesign(data)
     res.status(201).json({success:true,message:'Resource created successfully',design:response})
   } catch (error) {
     console.log('error at Design.create()',error);
-    res.status(500).json({message:"Internal server error!"})
+    const statusCode = error.statusCode || 500;
+    res.status(statusCode).json({error})
   }
 })
 
