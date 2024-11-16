@@ -7,8 +7,6 @@ const path = require('path');
 
 const router = express.Router();
 
-console.log('We are hereeeee./...............')
-
 // Ensure the 'uploads' folder exists
 const uploadFolder = path.join(__dirname, 'uploads');
 if (!fs.existsSync(uploadFolder)) {
@@ -19,7 +17,9 @@ if (!fs.existsSync(uploadFolder)) {
 // Configure Multer
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
-    cb(null, 'uploads/'); // Directory for uploaded files
+    const uploadDir = path.join(__dirname, 'uploads');
+    cb(null, uploadDir);
+    // cb(null, 'uploads/'); // Directory for uploaded files
   },
   filename: (req, file, cb) => {
     cb(null, `${Date.now()}-${file.originalname}`);
@@ -33,13 +33,10 @@ const upload = multer({
 
 router.post('/content-submission', verifyToken, upload.fields([{ name: 'logo' }, { name: 'photo' }]), 
   async(req,res) => {
-
+    
     console.log('Content-Type:', req.headers['content-type']);
 
     const {body , files, user} = req;
-
-    console.log(req.body)
-    console.log(req.files)
     console.log(req.user)
 
   try {
