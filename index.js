@@ -6,7 +6,7 @@ const authRoutes = require('./routes/auth');
 const homeRoutes = require('./routes/home');
 const subscriptionRoutes = require('./routes/subscription');
 const design = require('./routes/design');
-
+const contentSubmissionRoute = require('./routes/contentSubmission')
 dotenv.config();
 
 const app = express();
@@ -19,6 +19,7 @@ app.use('/api/auth', authRoutes);
 app.use('/api/', homeRoutes);
 app.use('/api' , subscriptionRoutes);
 app.use('/api' , design);
+app.use('/api',contentSubmissionRoute)
 
 // Connect to MongoDB
 mongoose
