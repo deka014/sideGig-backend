@@ -26,8 +26,8 @@ exports.createContentSubmission = async(bodyData,files,user) => {
   } = bodyData;
 
   console.log('this is files',files);
-  const logoFile = files['logo'] ? `/uploads/${req.files['logo'][0].filename}` : null;
-  const photoFile = files['photo'] ? `/uploads/${req.files['logo'][0].filename}` : null;
+  const logoFile = files['logo'] ? `/uploads/${files['logo'][0].filename}` : null;
+  const photoFile = files['photo'] ? `/uploads/${files['logo'][0].filename}` : null;
 
 
   // Create a new content submission
