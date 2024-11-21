@@ -18,14 +18,30 @@ cloudinary.config({
  * @throws {Error} - Throws an error if the upload fails.
  */
 exports.uploadImageToCloudinary = async (imagePath) => {
+  if(!imagePath) {return null}
+  
   try {
-    const result = await cloudinary.uploader.upload(imagePath, {
-      folder: 'dgin/user', // Optional: Folder to organize images in Cloudinary
-      resource_type: 'image',         // Specify resource type as image
-    });
+    //check if array as we might need to upload multiple files
+    if(Array.isArray(imagePath)) { 
 
-    // Return the secure URL of the uploaded image
-    return result.secure_url;
+      /**
+       * We are using Promise.all() so that the uploads happen concurently and ensure that we dont move forward until all async operations(file upload) completes.
+       * Inside we are using map as it returns the value that the promise will be resloved with.
+       */
+      const cloudninary_file_urls = await Promise.all(
+        imagePath.map( async(pathObj) => {
+          const key = Object.keys(pathObj)[0];
+          const path = pathObj[key];
+          const result = await cloudinary.uploader.upload(path,{
+            folder: 'dgin/user', // Optional: Folder to organize images in Cloudinary
+            resource_type: 'image',
+          })
+          return {[key]:result.secure_url}
+        })
+      );
+      return cloudninary_file_urls;
+    }
+    //else{}
   } catch (error) {
     console.error('Error uploading image to Cloudinary:', error);
     throw new Error('Failed to upload image to Cloudinary');

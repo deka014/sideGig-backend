@@ -1,5 +1,5 @@
-const mongoose  = require("mongoose");
 const ContentSubmission = require("../models/ContentSubmission");
+const { uploadImageToCloudinary } = require("./imageService");
 
 function validateContentSubmissionData(bodyData) {
   const {title,name} = bodyData
@@ -25,11 +25,14 @@ exports.createContentSubmission = async(bodyData,files,user) => {
     selectedPreviews,
   } = bodyData;
 
-  console.log('this is files',files);
-  const logoFile = files['logo'] ? `/uploads/${files['logo'][0].filename}` : null;
-  const photoFile = files['photo'] ? `/uploads/${files['logo'][0].filename}` : null;
+  console.log('this is files files files files files',files);
+  const logoFile = files['logo'] ? `${files['logo'][0].path}` : null;
+  const photoFile = files['photo'] ? `${files['photo'][0].path}` : null;
 
 
+  //upload image files to cloudinary
+  const cloudinary_upoloaded_file_links = await uploadImageToCloudinary([{logoFile},{photoFile}])
+  
   // Create a new content submission
   const newContentSubmission  = new ContentSubmission({
     userId:user.userId,
@@ -41,8 +44,8 @@ exports.createContentSubmission = async(bodyData,files,user) => {
     xlink,
     website,
     selectedPreviews:selectedPreviews ? JSON.parse(selectedPreviews) : [],
-    logo:logoFile,
-    photo:photoFile,
+    logo:cloudinary_upoloaded_file_links[0].logoFile,
+    photo:cloudinary_upoloaded_file_links[1].photoFile,
   })
   const savedContent = await newContentSubmission.save();
   return savedContent 
