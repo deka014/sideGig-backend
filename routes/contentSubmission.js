@@ -1,34 +1,18 @@
 const express = require("express");
-const multer = require('multer');
 const { verifyToken } = require("../middleware/authMiddleware");
 const { createContentSubmission } = require("../services/contentSubmissionService");
 const fs = require('fs');
 const path = require('path');
+const upload = require("../middleware/multerMiddleware");
 
 const router = express.Router();
 
 // Ensure the 'uploads' folder exists
-const uploadFolder = path.join(__dirname, 'uploads');
+const uploadFolder = path.join(__dirname,'..', 'uploads');
 if (!fs.existsSync(uploadFolder)) {
   fs.mkdirSync(uploadFolder);
   console.log('Uploads folder created');
 }
-
-// Configure Multer
-const storage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    const uploadDir = path.join(__dirname, 'uploads');
-    cb(null, uploadDir);
-    // cb(null, 'uploads/'); // Directory for uploaded files
-  },
-  filename: (req, file, cb) => {
-    cb(null, `${Date.now()}-${file.originalname}`);
-  },
-});
-const upload = multer({
-  storage,
-  limits: { fileSize: 10 * 1024 * 1024,} // 10 MB in bytes
-});
 
 
 router.post('/content-submission', verifyToken, upload.fields([{ name: 'logo' }, { name: 'photo' }]), 
@@ -41,6 +25,22 @@ router.post('/content-submission', verifyToken, upload.fields([{ name: 'logo' },
 
   try {
     const response = await createContentSubmission(body,files,user);
+
+    //unlink or remove file from diskStorage after success
+    /**
+     * we are using Object.keys(files) because files is an object. So we are basically iterating the keys of the object. 
+     */
+    Object.keys(files).forEach((file) => {
+      const filePath = files[file][0].path;
+      fs.unlink(filePath, (err) => {
+        if (err) {
+          console.error(`Error removing ${file}:`, err);
+        } else {
+          console.log(`${file} removed successfully`);
+        }
+      });
+    });
+
     res.status(201).json({message:'content submitted successfully', content:response})
   } catch (error) {
     console.error('Error submitting content:', error);
