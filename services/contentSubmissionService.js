@@ -22,17 +22,23 @@ exports.createContentSubmission = async(bodyData,files,user) => {
     thread,
     xlink,
     website,
-    selectedPreviews,
+    selectedPreviews
   } = bodyData;
-
-  console.log('this is files files files files files',files);
-  const logoFile = files['logo'] ? `${files['logo'][0].path}` : null;
-  const photoFile = files['photo'] ? `${files['photo'][0].path}` : null;
 
 
   //upload image files to cloudinary
-  const cloudinary_upoloaded_file_links = await uploadImageToCloudinary([{logoFile},{photoFile}])
-  
+  const imageFilesArray = [] //[{<key>:'<filePath>'},...]
+  if(files) {                             //populates imageFilesArray (array of objects)
+    Object.keys(files).forEach((file)=>{
+      console.log('this is file',file)
+      console.log('this is files',files)
+      console.log('this is path of the file in files',files[file][0].path)
+        imageFilesArray.push({[file]:files[file][0].path})
+    })
+  }
+  console.log('this is imageFilesArray:',imageFilesArray)
+  const cloudinary_upoloaded_file_links = await uploadImageToCloudinary(imageFilesArray)
+
   // Create a new content submission
   const newContentSubmission  = new ContentSubmission({
     userId:user.userId,
@@ -43,9 +49,9 @@ exports.createContentSubmission = async(bodyData,files,user) => {
     thread,
     xlink,
     website,
-    selectedPreviews:selectedPreviews ? JSON.parse(selectedPreviews) : [],
-    logo:cloudinary_upoloaded_file_links[0].logoFile,
-    photo:cloudinary_upoloaded_file_links[1].photoFile,
+    selectedPreviews: JSON.parse(selectedPreviews), 
+    logo:cloudinary_upoloaded_file_links?.find((obj)=>{return obj.logo})?.logo || null, // Find first object with 'logo' and return the logo or null if not found
+    photo:cloudinary_upoloaded_file_links?.find((obj)=>{return obj.photo})?.photo || null // Find first photo with 'photo' and return the photo or null if not found
   })
   const savedContent = await newContentSubmission.save();
   return savedContent 
