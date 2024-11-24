@@ -22,7 +22,7 @@ router.post('/content-submission', verifyToken, upload.fields([{ name: 'logo' },
 
     const {body , files, user} = req;
     console.log(req.user)
-
+    console.log(body)
   try {
     const response = await createContentSubmission(body,files,user);
 
@@ -44,7 +44,7 @@ router.post('/content-submission', verifyToken, upload.fields([{ name: 'logo' },
     res.status(201).json({message:'content submitted successfully', content:response})
   } catch (error) {
     console.error('Error submitting content:', error);
-    res.status(500).json({ message: error.message });
+    res.status(500).json({ error: error.message });
   }
 })
 

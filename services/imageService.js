@@ -17,19 +17,19 @@ cloudinary.config({
  * @returns {Promise<string>} - The URL of the uploaded image.
  * @throws {Error} - Throws an error if the upload fails.
  */
-exports.uploadImageToCloudinary = async (imagePath) => {
-  if(!imagePath) {return null}
+exports.uploadImageToCloudinary = async (imageFilesArray) => {
+  if(!imageFilesArray) {return null}
   
   try {
     //check if array as we might need to upload multiple files
-    if(Array.isArray(imagePath)) { 
+    if(Array.isArray(imageFilesArray) && imageFilesArray.length !==0 ) { 
 
-      /**
-       * We are using Promise.all() so that the uploads happen concurently and ensure that we dont move forward until all async operations(file upload) completes.
-       * Inside we are using map as it returns the value that the promise will be resloved with.
-       */
+    /**
+     * We are using Promise.all() so that the uploads happen concurently and ensure that we dont move forward until all async operations(file upload) completes.
+     * Inside we are using map as it returns the value that the promise will be resloved with.
+     */
       const cloudninary_file_urls = await Promise.all(
-        imagePath.map( async(pathObj) => {
+        imageFilesArray.map( async(pathObj) => {
           const key = Object.keys(pathObj)[0];
           const path = pathObj[key];
           const result = await cloudinary.uploader.upload(path,{
@@ -39,11 +39,11 @@ exports.uploadImageToCloudinary = async (imagePath) => {
           return {[key]:result.secure_url}
         })
       );
-      return cloudninary_file_urls;
+      return cloudninary_file_urls; //If there are no images it will be undefined
     }
     //else{}
   } catch (error) {
     console.error('Error uploading image to Cloudinary:', error);
-    throw new Error('Failed to upload image to Cloudinary');
+    throw new Error('Error submitting files!');
   }
 };
