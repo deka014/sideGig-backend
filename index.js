@@ -8,10 +8,14 @@ const subscriptionRoutes = require('./routes/subscription');
 const design = require('./routes/design');
 const contentSubmissionRoute = require('./routes/contentSubmission'); //contentSubmissionRoute
 const orderRoute = require('./routes/order');  //orderRoute
+var cors = require('cors')
+
+
  
 dotenv.config();
 
 const app = express();
+app.use(cors())
 
 // Middleware
 app.use(express.json());
