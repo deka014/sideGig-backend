@@ -1,26 +1,47 @@
-// models-> orders
-
 const mongoose = require('mongoose');
 
 const OrderSchema = new mongoose.Schema({
-  userId: { type: mongoose.Schema.Types.ObjectId, required: true },   // Link to the User
-  assignee: { type: String, default: null }, // Optional (can be null)
-  selectedCreative: { type: String, required: true }, // Link of creative design
-  contentSnapshot: 
-  {
-    name: String,
-    title: String,
-    logo: String, // Path to the uploaded logo image
-    photo: String, // Path to the uploaded photo image
-    facebook: String,
-    instagram: String,
-    thread: String,
-    xlink: String,
-    website: String,
-    selectedPreviews: [Number],
-    createdAt: { type: Date, default: Date.now }
+  orderId: {
+    type: String,
+    required: true,
+    unique: true,
+  },
+  selectedDesigns: [
+    {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'Design', // Reference to the Design schema
+      required: true,
+    },
+  ],
+  price: {
+    type: Number,
+    required: true,
+  },
+  status: {
+    type: String,
+    enum: ['In Progress', 'Confirmed', 'Delivered', 'Cancelled'], // Possible order statuses
+    default: 'In Progress',
+  },
+  additionalInfo: {
+    type: String,
+    default: null,
+  },
+  orderPreviewUrl: {
+    type: String, // URL for the preview image of the order
+    default: null,
+  },
+  estimatedDeliveryDate: {
+    type: Date, // Estimated delivery date of the order
+    required: true,
+  },
+  createdAt: {
+    type: Date,
+    default: Date.now,
+  },
+  updatedAt: {
+    type: Date,
+    default: null,
   },
 });
 
 module.exports = mongoose.model('Order', OrderSchema);
-
