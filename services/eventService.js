@@ -12,35 +12,46 @@ function validateCreateEventFileds(data) {
   }
 }
 
-function validateUpdateEventFields(body) {
-  const {title,description,designs} = body;
-  if(!title || !description) {
-    throw {message:'Title and description cannot be empty'}
-  }
-  if(typeof title !== 'string' || typeof description !== 'string') {
-    throw {message:'Title and Description should be of type string', statusCode:401}
-  }
-  
+function validateUpdateEventFields(fieldsToUpdate) {
+  const allowedFields = ['title', 'description', 'eventDate', 'designs'];
 
-  //check if design exists or not
-  if(designs) {
+  // Validate fields individually
+  if (fieldsToUpdate.title && typeof fieldsToUpdate.title !== 'string') {
+    throw { message: 'Title should be a string', statusCode: 401 };
+  }
+  if (fieldsToUpdate.description && typeof fieldsToUpdate.description !== 'string') {
+    throw { message: 'Description should be a string', statusCode: 401 };
+  }
+  if (fieldsToUpdate.eventDate && !(new Date(fieldsToUpdate.eventDate) instanceof Date)) {
+    throw { message: 'Invalid eventDate format', statusCode: 401 };
+  }
 
-    if(!Array.isArray(designs)) {
-      throw {message:'Design field should be an array', statusCode:401}
+  //checking if designs exists
+  if (fieldsToUpdate.designs) {
+    if (!Array.isArray(fieldsToUpdate.designs)) {
+      throw { message: 'Design field should be an array', statusCode: 401 };
+    }
+    if (fieldsToUpdate.designs.length === 0) {
+      throw { message: 'Designs array is empty', statusCode: 401 };
     }
 
-    if(designs.length === 0) {
-      throw {message: 'Desings array is empty', statusCode:401}
-    }
-
-    //validating each element
-    for(let i=0; i<designs.length; i++) {
-      const design = designs[i];
-      if(!mongoose.Types.ObjectId.isValid(design)) {
-        throw {message:`Invalid id type at index designs[${i}]`,statusCode: 401}
+    // Validate each design ID
+    for (let i = 0; i < fieldsToUpdate.designs.length; i++) {
+      const design = fieldsToUpdate.designs[i];
+      if (!mongoose.Types.ObjectId.isValid(design)) {
+        throw { message: `Invalid ID at designs[${i}]`, statusCode: 401 };
       }
     }
   }
+
+  // Filter out fields not allowed for update
+  for (const key of Object.keys(fieldsToUpdate)) {
+    if (!allowedFields.includes(key)) {
+      delete fieldsToUpdate[key];
+    }
+  }
+
+  return fieldsToUpdate; // Return the validated and filtered object
 }
 
 exports.createEvent = async (body) => {
@@ -71,29 +82,30 @@ exports.getEvents = async (query) => {
   }
 }
 
-exports.updateEvent = async (eventId,body) => {
+exports.updateEvent = async (eventId, body) => {
   try {
-    const id = eventId.replace(':',''); //formatting eventId
+    const id = eventId.replace(':', ''); // formatting eventId
 
-    //formatting designs array into valid ObjectId before passing to validateUpdateEventFields()
-    const {designs} = body;
-    if(designs) {
-      const parsed_designs =  JSON.parse(designs)
-      const final_parsed_designs = parsed_designs.map(id => new mongoose.Types.ObjectId(id))
-      body.designs = final_parsed_designs;
+    const fieldsToUpdate = {...body};
+
+    // If designs are present, parse them to ObjectId instances
+    if (fieldsToUpdate.designs) {
+      const parsedDesigns = JSON.parse(fieldsToUpdate.designs);
+      fieldsToUpdate.designs = parsedDesigns.map((id) => new mongoose.Types.ObjectId(id));
+    }
+    const validatedFields = validateUpdateEventFields(fieldsToUpdate)
+    console.log('Validation success:', fieldsToUpdate);
+
+    // Update the event in the database
+    const updatedEvent = await Event.findByIdAndUpdate(id, { $set: validatedFields }, { new: true });
+
+    if (!updatedEvent) {
+      throw { message: 'Event not found', statusCode: 404 };
     }
 
-    validateUpdateEventFields(body);
-    console.log('validation success')
-    const fieldsToUpdate = body;
-    
-    const updatedEvent = await Event.findByIdAndUpdate(id,{$set: fieldsToUpdate}, {new: true});
-    if(!updatedEvent) {
-      throw {message:'Event not found',statusCode:404}
-    }
-    return {updatedEvent}
+    return { updatedEvent };
   } catch (error) {
-    console.log('errorr caught at updateEvent!')
+    console.error('Error caught at updateEvent!');
     throw error;
   }
-}
+};
