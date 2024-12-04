@@ -6,11 +6,31 @@ const OrderSchema = new mongoose.Schema({
     required: true,
     unique: true,
   },
+  userId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User', // Reference to the User schema
+    required: true,
+  },
   selectedDesigns: [
     {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: 'Design', // Reference to the Design schema
-      required: true,
+      designId: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Design', // Reference to the Design schema
+        required: true,
+      },
+      deliverUrl: {
+        type: String, // Personalized delivery URL for the design
+        default: null,
+      },
+      status: {
+        type: String,
+        enum: ['Processing', 'Completed' , 'cancelled'], // Delivery status for the design
+        default: 'Processing',
+      },
+      deliveredDate: {
+        type: Date, // Date when the design was delivered
+        default: null,
+      },
     },
   ],
   price: {
@@ -37,11 +57,7 @@ const OrderSchema = new mongoose.Schema({
   createdAt: {
     type: Date,
     default: Date.now,
-  },
-  updatedAt: {
-    type: Date,
-    default: null,
-  },
+  }
 });
 
 module.exports = mongoose.model('Order', OrderSchema);
