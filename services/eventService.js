@@ -109,3 +109,53 @@ exports.updateEvent = async (eventId, body) => {
     throw error;
   }
 };
+
+
+exports.getUpcomingEventsWithRandomDesign = async () => {
+  const currentDate = new Date();
+
+  // Fetch events for the next 30 days with non-empty designs array
+  const events = await Event.find({
+    eventDate: { $gte: currentDate },
+    designs: { $exists: true, $ne: [] }, // Ensure designs array exists and is not empty
+  })
+    .sort({ eventDate: 1 }) // Sort by event date
+    .limit(30) // Limit to 30 events
+    .populate({
+      path: 'designs',
+      match: { status: 'available' }, // Only fetch designs with status 'available'
+    });
+
+  // Process each event and select a random design
+
+  const eventsWithRandomDesigns = events
+    .map((event) => {
+      const availableDesigns = event.designs;
+
+      // Select a random design
+      const randomDesign =
+        availableDesigns.length > 0
+          ? availableDesigns[Math.floor(Math.random() * availableDesigns.length)]
+          : null;
+
+      // Exclude events without available designs
+      if (!randomDesign) return null;
+
+      // Return only selected fields
+      return {
+        eventId: event._id,
+        title: event.title,
+        description: event.description,
+        eventDate: event.eventDate,
+        randomDesign: {
+          id: randomDesign._id,
+          title: randomDesign.title,
+          imageUrl: randomDesign.imageUrl,
+          description: randomDesign.description,
+        },
+      };
+    })
+    .filter(Boolean); // Remove null entries
+
+  return eventsWithRandomDesigns;
+};

@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const authService = require('../services/authService');
 const { createEvent, updateEvent, getEvents } = require('../services/eventService');
+const { getUpcomingEventsWithRandomDesign } = require('../services/eventService');
 
 router.post('/events',async (req,res) => {
   try {
@@ -33,5 +34,16 @@ router.put('/events:eventId', async (req,res) => {
     res.status(statusCode).json({message:'Error updating resource', error:error})
   }
 })
+
+// get all events from current date to next 30 events
+router.get('/upcoming-events', async (req, res) => {
+  try {
+    const events = await getUpcomingEventsWithRandomDesign();
+    res.status(200).json(events);
+  } catch (error) {
+    console.error('Error fetching events:', error);
+    res.status(500).json({ message: 'Internal Server Error' });
+  }
+});
 
 module.exports = router
