@@ -2,9 +2,7 @@ const mongoose = require('mongoose');
 
 const OrderSchema = new mongoose.Schema({
   orderId: {
-    type: String,
-    required: true,
-    unique: true,
+    type: String
   },
   userId: {
     type: mongoose.Schema.Types.ObjectId,
@@ -34,13 +32,12 @@ const OrderSchema = new mongoose.Schema({
     },
   ],
   price: {
-    type: Number,
-    required: true,
+    type: Number, // Total price of the order
   },
   status: {
     type: String,
-    enum: ['In Progress', 'Confirmed', 'Delivered', 'Cancelled'], // Possible order statuses
-    default: 'In Progress',
+    enum: ['Progress', 'Confirmed', 'Delivered', 'Cancelled'], // Possible order statuses
+    default: 'Progress',
   },
   additionalInfo: {
     type: String,
@@ -48,7 +45,7 @@ const OrderSchema = new mongoose.Schema({
   },
   orderPreviewUrl: {
     type: String, // URL for the preview image of the order
-    default: null,
+    default: 'https://images.unsplash.com/photo-1593175692310-7b1bedb76360?w=600&auto=format&fit=crop&q=60&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8N3x8b3JkZXJzfGVufDB8fDB8fHww',
   },
   estimatedDeliveryDate: {
     type: Date, // Estimated delivery date of the order
