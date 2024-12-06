@@ -2,6 +2,7 @@
 const User = require('../models/Users');
 const Design = require('../models/Design');
 const { startOfMonth, endOfMonth, addMonths, parseISO, startOfDay, endOfDay, isWithinInterval, addDays } = require('date-fns');
+const { default: mongoose } = require('mongoose');
 
 exports.getDesignsByDate = async (userId = null, targetDate) => {
   const today = new Date();
@@ -61,21 +62,33 @@ exports.getDesignsByDate = async (userId = null, targetDate) => {
 
 
 function validateDesignData(data) {
-  const {title,imageUrl,releaseDate,accessLevel,description} = data;
+  const { title, imageUrl, owner, maxSelections, selectedCount, status } = data;
 
-  //validate fileds
-  if(!title || !imageUrl || !releaseDate) {
-    throw {message:'title, imageUrl, releaseDate are required',statusCode: 400}
+  // Validate required fields
+  if (!title || !imageUrl || !owner) {
+    throw { message: 'title, imageUrl, and owner are required', statusCode: 400 };
   }
-  if(typeof title !== 'string' || typeof imageUrl!== 'string' || !releaseDate instanceof Date || typeof accessLevel!== 'string' || typeof description!== 'string') {
-    throw {message:'Invalid field type!',statusCode: 400}
+
+  // Validate field types
+  if (
+    typeof title !== 'string' ||
+    typeof imageUrl !== 'string' ||
+    (data.description && typeof data.description !== 'string') ||
+    !mongoose.Types.ObjectId.isValid(owner) ||
+    (maxSelections && typeof maxSelections !== 'number') ||
+    (selectedCount && typeof selectedCount !== 'number') ||
+    (status && !['available', 'unavailable'].includes(status))
+  ) {
+    throw { message: 'Invalid field type or value!', statusCode: 400 };
   }
 }
 
-exports.addDesign = async (data) => {
-  validateDesignData(data) //validate the data
+
+exports.addDesign = async (data,user) => {
+  validateDesignData({...data, owner:user.userId}) //validate the data
   try{
-    return await Design.create(data)
+    console.log('addDesign Current user',user)
+    return await Design.create({...data,owner:user.userId})
   } catch(error) {
     //NOTE: function validateDesignData(data) already does the type and falsy validation but I'm adding the below check for other validation checks by the DB.
     if(error.name === "ValidationError") {
@@ -85,3 +98,34 @@ exports.addDesign = async (data) => {
     throw error;
   }
 }
+
+exports.updateDesign = async (designId, updateData, user) => {
+  
+  try {
+    const id = designId.replace(':', '');
+    console.log(user)
+    console.log(id)
+    
+/*Basic check for checking whether the current user is the same user who created the design.
+  Any one except the user who created the design should not be allowed to perform PUT(update) request    
+*/
+    const design = await Design.findById(id);
+    if(!design) {
+      throw {message:'Design not found',statusCode:404}
+    }
+    if(String(design.owner) !== String(user.userId)) {
+      throw {message:'User is not authorized for this operation!',statusCode:401}
+    }
+
+    // Update the design document
+    const updatedDesign = await Design.findByIdAndUpdate(id, updateData, {new: true});
+
+
+    return {updatedDesign};
+  } catch (error) {
+    if (error.name === 'ValidationError') {
+      throw { message: 'Validation error!', mongoDbResponse: error };
+    }
+    throw error;
+  }
+};

@@ -35,11 +35,11 @@ router.get('/designs-by-date', async (req, res) => {
 // @route   POST /api/auth/designs
 // @desc    To (POST)add a new design in the DB
 // @access  Private
-router.post('/designs', async (req,res) =>{
+router.post('/designs', verifyToken, async (req,res) =>{
   const data = req.body;
-
+  const user = req.user
   try {
-    const response = await designService.addDesign(data)
+    const response = await designService.addDesign(data,user)
     res.status(201).json({success:true,message:'Resource created successfully',design:response})
   } catch (error) {
     console.log('error at Design.create()',error);
@@ -48,5 +48,16 @@ router.post('/designs', async (req,res) =>{
   }
 })
 
+router.put('/designs:designId',verifyToken, async (req,res) => {
+  try {
+    const {body, user} = req;
+    const {designId} = req.params;
 
+    const response = await designService.updateDesign(designId,body,user);
+    res.status(200).json({success:true, message:'Resource updated successfully', updatedEvent: response.updatedDesign})
+  } catch (error) {
+    const statusCode = error.statusCode || 500;
+    res.status(statusCode).json({message:'Error updating resource', error:error})
+  }
+})
 module.exports = router;
