@@ -13,17 +13,25 @@ const OrderSchema = new mongoose.Schema({
     {
       designId: {
         type: mongoose.Schema.Types.ObjectId,
-        ref: 'Design', // Reference to the Design schema
+        // ref: 'Design', // Reference to the Design schema
         required: true,
       },
+      designImage: {
+        type: String, // URL for the design image
+        required: true,
+      },
+      owner: {
+        type : mongoose.Schema.Types.ObjectId,
+        default: null
+      }, // Pre-embed owner
       deliverUrl: {
-        type: String, // Personalized delivery URL for the design
+        type: String, // Personalized delivery URL for the design if required
         default: null,
       },
       status: {
         type: String,
-        enum: ['Processing', 'Completed' , 'cancelled'], // Delivery status for the design
-        default: 'Processing',
+        enum: ['Processing', 'Completed' , 'cancelled', null], // Delivery status for the design
+        default: null,
       },
       deliveredDate: {
         type: Date, // Date when the design was delivered
@@ -45,7 +53,7 @@ const OrderSchema = new mongoose.Schema({
   },
   orderPreviewUrl: {
     type: String, // URL for the preview image of the order
-    default: 'https://images.unsplash.com/photo-1593175692310-7b1bedb76360?w=600&auto=format&fit=crop&q=60&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8N3x8b3JkZXJzfGVufDB8fDB8fHww',
+    default: null,
   },
   estimatedDeliveryDate: {
     type: Date, // Estimated delivery date of the order
@@ -54,7 +62,12 @@ const OrderSchema = new mongoose.Schema({
   createdAt: {
     type: Date,
     default: Date.now,
-  }
+  },
+  assignee: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User',
+    default: null,
+  },
 });
 
 module.exports = mongoose.model('Order', OrderSchema);

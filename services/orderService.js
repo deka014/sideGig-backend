@@ -88,8 +88,8 @@ exports.placeOrder = async (userId, selectedDesigns, price, additionalInfo) => {
 
       updatedDesigns.push({
         designId: design._id,
-        deliverUrl: null, // Placeholder for the personalized URL
-        status: 'Processing',
+        designImage: design.imageUrl,
+        owner : design.owner
       });
     }
 

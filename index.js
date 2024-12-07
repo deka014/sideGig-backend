@@ -9,6 +9,7 @@ const design = require('./routes/design');
 const contentSubmissionRoute = require('./routes/contentSubmission'); //contentSubmissionRoute
 const orderRoute = require('./routes/order');  //orderRoute
 const eventRoute = require('./routes/event')
+const designerOrder = require('./routes/designerOrder')
 var cors = require('cors')
 
 
@@ -29,6 +30,7 @@ app.use('/api', design);
 app.use('/api', contentSubmissionRoute) //contentSubmission
 app.use('/api', orderRoute);   //order
 app.use('/api',eventRoute); //event
+app.use('/api/delivery',designerOrder); //event
 // Connect to MongoDB
 mongoose
   .connect(process.env.MONGO_URI, {
