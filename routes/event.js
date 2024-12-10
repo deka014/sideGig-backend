@@ -6,6 +6,7 @@ const { getUpcomingEventsWithRandomDesign } = require('../services/eventService'
 
 router.post('/events',async (req,res) => {
   try {
+    console.log('events data',req.body)
     const event = await createEvent(req.body)
     res.status(201).json({success:true,message:'Event created successuflly', event: event.event})
   } catch (error) {
