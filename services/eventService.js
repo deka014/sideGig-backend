@@ -69,13 +69,13 @@ exports.createEvent = async (body) => {
 exports.getEvents = async (query) => {
   try {
     const { startDate, hasDesigns } = query;
-    const filter = {eventDate: {$gte: new Date(startDate || Date.now())}};
+    // const filter = {eventDate: {$gte: new Date(startDate || Date.now())}};
+    // if(hasDesigns === "true") {
+    //   filter.designs = {$exists: true, $ne:[]}  // Filter events with non-empty designs
+    // }
+    // const events = await Event.find(filter).populate("designs")
 
-    if(hasDesigns === "true") {
-      filter.designs = {$exists: true, $ne:[]}  // Filter events with non-empty designs
-    }
-
-    const events = await Event.find(filter).populate("designs")
+    const events = await Event.find().sort({ eventDate: -1 }).populate("designs") //sord by eventDate in descedeing
     return {events}
   } catch (error) {
     throw error;
