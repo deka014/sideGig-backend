@@ -82,6 +82,32 @@ exports.getEvents = async (query) => {
   }
 }
 
+exports.getOneEvent = async (id) => {
+  try {
+    const eventId = id.replace(':','');
+    console.log('getOneEvent id',id);
+    console.log('getOneEvent eventId',eventId)
+
+    const response = await Event.findById(id);
+    if(!response) {
+      throw {statusCode: 404, message:'Event not found. Please ensure id is valid!'}
+    }
+    return response;
+  } catch (error) {
+    throw error;
+  }
+}
+
+exports.updateEventDesign = async (eventId,data) => {
+  try {
+    const updatedEvent = await Event.findByIdAndUpdate(eventId,{$push:{designs:data.designId}},{new:true})
+    console.log("updatedEvent with design",updatedEvent)
+    return updatedEvent;
+  } catch (error) {
+    throw error;
+  }
+}
+
 exports.updateEvent = async (eventId, body) => {
   try {
     const id = eventId.replace(':', ''); // formatting eventId
