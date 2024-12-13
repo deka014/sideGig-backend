@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const authService = require('../services/authService');
-const { createEvent, updateEvent, getEvents } = require('../services/eventService');
+const { createEvent, updateEvent, getEvents, getOneEvent, updateEventDesign } = require('../services/eventService');
 const { getUpcomingEventsWithRandomDesign } = require('../services/eventService');
 
 router.post('/events',async (req,res) => {
@@ -24,6 +24,22 @@ router.get('/events',async (req,res) => {
   }
 })
 
+router.get('/event/:id', async (req,res) => {
+  console.log('we are here /event')
+  try {
+    console.log(req.params)
+    const {id} = req.params;
+    const eventId = id.replace(':','');
+    console.log('eventId',eventId)
+    const event = await getOneEvent(eventId);
+    res.status(200).json({success:true,event})
+  } catch (error) {
+    const statusCode = error.statusCode || 500;
+    res.status(statusCode).json({success:false,message:"Error getting event",error})
+  }
+}
+)
+
 router.put('/events:eventId', async (req,res) => {
   try {
     const { eventId } = req.params;
@@ -35,6 +51,23 @@ router.put('/events:eventId', async (req,res) => {
   }
 })
 
+router.patch('/event/:id/addDesign', async(req,res) => {
+  try {
+    console.log('in /event/:id/addDesign')
+    const {id} = req.params;
+    console.log('req.params',req.params)
+    const eventId = id.replace(':','');
+    console.log("id",id)
+    console.log("eventId",id)
+
+    console.log(req.body);
+    const response = await updateEventDesign(eventId,req.body)
+    res.status(200).json({success:true,response})
+  } catch (error) {
+    const statusCode = error.statusCode || 500;
+    res.status(statusCode).json({success:false,message:"Error in adding design to event",error})
+  }
+})
 // get all events from current date to next 30 events
 router.get('/upcoming-events', async (req, res) => {
   try {
