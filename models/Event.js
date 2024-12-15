@@ -25,6 +25,10 @@ const EventSchema = new mongoose.Schema({
     type: Date,
     default: Date.now,
   },
+  available: {
+    type: Boolean,
+    default: true,
+  },
 });
 
 module.exports = mongoose.model('Event', EventSchema);
