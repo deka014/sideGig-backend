@@ -88,7 +88,8 @@ exports.getOneEvent = async (id) => {
     console.log('getOneEvent id',id);
     console.log('getOneEvent eventId',eventId)
 
-    const response = await Event.findById(id);
+    const response = await Event.findById(id).populate('designs', 'imageUrl title selectedCount status'); ;
+    console.log(response);
     if(!response) {
       throw {statusCode: 404, message:'Event not found. Please ensure id is valid!'}
     }
