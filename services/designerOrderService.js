@@ -75,10 +75,10 @@ exports.getAssignedOrderWithLatestContentSubmission = async (orderId, designerId
   try {
     // Fetch the order to verify ownership and retrieve relevant details
     const order = await Order.findOne({
-      _id: orderId,
+      orderId: orderId,
       assignee: designerId, // Verify the designer is assigned
     })
-      .select('orderId userId selectedDesigns createdAt estimatedDeliveryDate status')
+      .select('orderId userId selectedDesigns createdAt estimatedDeliveryDate status orderPreviewUrl')
       .populate({
         path: 'selectedDesigns.designId',
         select: 'title imageUrl description',
@@ -105,3 +105,33 @@ exports.getAssignedOrderWithLatestContentSubmission = async (orderId, designerId
   }
 };
 
+
+//to update orderPreviewUrl
+exports.updateOrderPreviewUrl = async (orderId,dataToUpdate) => {
+  try {
+    const orderPreviewUrl = dataToUpdate?.orderPreviewUrl || null;
+    if(!orderPreviewUrl) {
+      throw new Error('Cannot update with orderPreviewUrl as null!')
+    }
+
+    const updatedOrder = await Order.findOneAndUpdate({orderId},{$set:{orderPreviewUrl:orderPreviewUrl}},{new:true})
+    return updatedOrder;
+  } catch (error) {
+    console.log('Error occured at updateOrderimagePreviewUrl Service',error)
+    throw new Error('Error updating imagePreviewUrl!');
+  }
+}
+
+exports.updateStatus = async (orderId,dataToUpdate) => {
+  const status = dataToUpdate?.status || null;
+  if(!status) {
+    throw new Error('Cannot updtae sttaus with null')
+  }
+  try {
+    const updatedOrder = await Order.findOneAndUpdate({orderId},{$set:{status:status}},{new:true});
+    return updatedOrder;
+  } catch (error) {
+    console.log('Error occured at updateOrderStatus service!',error);
+    throw new Error('Error updating order sttaus!');
+  }
+}
