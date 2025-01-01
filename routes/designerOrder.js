@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const { verifyToken } = require('../middleware/authMiddleware');
-const { getAssignedOrderWithLatestContentSubmission, getPendingOrdersForDesigner,getAvailableOrdersForDesigner, acceptOrderForDesigners, getCompletedOrdersForDesigners} = require('../services/designerOrderService');
+const { getAssignedOrderWithLatestContentSubmission, getPendingOrdersForDesigner,getAvailableOrdersForDesigner, acceptOrderForDesigners, getCompletedOrdersForDesigners, updateOrderPreviewUrl, updateStatus} = require('../services/designerOrderService');
 
 
 // for designers 
@@ -70,9 +70,10 @@ router.get('/order/:orderId', verifyToken, async (req, res) => {
   try {
     const {userId} = req.user; // Extract designer ID from JWT
     const { orderId } = req.params;
-  
+    const id = orderId.replace(':','');
+    
     // Fetch the order and ensure the designer is assigned
-    const order = await getAssignedOrderWithLatestContentSubmission(orderId, userId);
+    const order = await getAssignedOrderWithLatestContentSubmission(id, userId);
 
     if (!order) {
       return res.status(403).json({ message: 'You are not authorized to view this order.' });
@@ -85,7 +86,41 @@ router.get('/order/:orderId', verifyToken, async (req, res) => {
   }
 });
 
+//route to update the OrderPreviewUrl
+router.patch('/view-order/update-orderPreviewUrl/:orderId',verifyToken, async (req,res) => {
+  try {
+    const {orderId} = req.params;
+    const id = orderId.replace(':','');
+    const { orderPreviewUrl } = req.body;
+    const dataToUpdate = {
+      orderPreviewUrl
+    }
 
+    const updatedOrder = await updateOrderPreviewUrl(orderId,dataToUpdate)
 
+    res.status(200).json({success:true,message:'Update Success', updatedOrder})
+  } catch (error) {
+    console.log('Error updating order')
+    res.status(500).json({success:false,message:'Failed to update imagePreviewUrl'})
+  }
+})
 
+//route to update the status
+router.patch('/view-order/update-status/:orderId',verifyToken, async (req,res) => {
+  try {
+    const {orderId} = req.params;
+    const id = orderId.replace(':','');
+    const { status } = req.body;
+    const dataToUpdate = {
+      status
+    }
+
+    const updatedOrder = await updateStatus(id,dataToUpdate)
+
+    res.status(200).json({success:true,message:'Update Success', updatedOrder})
+  } catch (error) {
+    console.log('Error updating order')
+    res.status(500).json({success:false,message:'Failed to update status'})
+  }
+})
 module.exports = router;
