@@ -30,7 +30,7 @@ router.post('/verify-otp', async (req, res) => {
             success: true,
             token,
             data: {
-                userId: user.phoneNumber,
+                userId: user._id,
                 phoneNumber: user.phoneNumber,
             },
         }); // Return response to client
