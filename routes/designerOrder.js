@@ -51,7 +51,8 @@ router.get('/pending-orders', verifyToken, async (req, res) => {
 // Get all completed orders for a designer
 router.get('/completed-orders', verifyToken, async (req, res) => {
   try {
-    const designerId = req.user.id; // Designer ID from JWT
+    const designerId = req.user.userId; // Designer ID from JWT
+    
     const orders = await getCompletedOrdersForDesigners(designerId);
 
     if (orders.length === 0) {
