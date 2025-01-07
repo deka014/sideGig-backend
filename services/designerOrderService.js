@@ -75,7 +75,7 @@ exports.getAssignedOrderWithLatestContentSubmission = async (orderId, designerId
   try {
     // Fetch the order to verify ownership and retrieve relevant details
     const order = await Order.findOne({
-      orderId: orderId,
+      _id: orderId,
       assignee: designerId, // Verify the designer is assigned
     })
       .select('orderId userId selectedDesigns createdAt estimatedDeliveryDate status orderPreviewUrl')
@@ -114,7 +114,7 @@ exports.updateOrderPreviewUrl = async (orderId,dataToUpdate) => {
       throw new Error('Cannot update with orderPreviewUrl as null!')
     }
 
-    const updatedOrder = await Order.findOneAndUpdate({orderId},{$set:{orderPreviewUrl:orderPreviewUrl}},{new:true})
+    const updatedOrder = await Order.findOneAndUpdate({_id : orderId},{$set:{orderPreviewUrl:orderPreviewUrl}},{new:true})
     return updatedOrder;
   } catch (error) {
     console.log('Error occured at updateOrderimagePreviewUrl Service',error)
@@ -128,7 +128,7 @@ exports.updateStatus = async (orderId,dataToUpdate) => {
     throw new Error('Cannot updtae sttaus with null')
   }
   try {
-    const updatedOrder = await Order.findOneAndUpdate({orderId},{$set:{status:status}},{new:true});
+    const updatedOrder = await Order.findOneAndUpdate({_id:orderId},{$set:{status:status}},{new:true});
     return updatedOrder;
   } catch (error) {
     console.log('Error occured at updateOrderStatus service!',error);
