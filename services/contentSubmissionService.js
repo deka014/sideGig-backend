@@ -56,3 +56,78 @@ exports.createContentSubmission = async(bodyData,files,user) => {
   const savedContent = await newContentSubmission.save();
   return savedContent 
 }
+
+exports.updatePreviousContentSubmission = async(contentSubmissionId,bodyData,files,user) => {
+  console.log('Inside updatePreviousContentSubmission service')
+  validateContentSubmissionData(bodyData);
+
+  const {
+    name,
+    title,
+    facebook,
+    instagram,
+    thread,
+    xlink,
+    website,
+    selectedPreviews
+  } = bodyData;
+
+
+  //upload image files to cloudinary
+  const imageFilesArray = [] //[{<key>:'<filePath>'},...]
+  if(files) {                             //populates imageFilesArray (array of objects)
+    Object.keys(files).forEach((file)=>{
+      console.log('this is file',file)
+      console.log('this is files',files)
+      console.log('this is path of the file in files',files[file][0].path)
+        imageFilesArray.push({[file]:files[file][0].path})
+    })
+  }
+  console.log('this is imageFilesArray:',imageFilesArray)
+  let cloudinary_upoloaded_file_links;
+  if(imageFilesArray.length>=1) {
+    console.log('Yes yeah yes!')
+    cloudinary_upoloaded_file_links = await uploadImageToCloudinary(imageFilesArray);
+
+    const images = {}
+    imageFilesArray.forEach(obj=>{
+      if(obj.hasOwnProperty('logo'))
+      {
+        images.logo = cloudinary_upoloaded_file_links?.find((obj)=>{return obj.logo})?.logo || null;
+      }
+      if(obj.hasOwnProperty('photo')) {
+        images.photo = cloudinary_upoloaded_file_links?.find((obj)=>{return obj.photo})?.photo || null;
+      }
+    })
+    console.log('This is the images object',images)
+    const dataToUpdate  = {
+      userId:user.userId,
+      name,
+      title,
+      facebook,
+      instagram,
+      thread,
+      xlink,
+      website,
+      selectedPreviews: JSON.parse(selectedPreviews), 
+      ...images
+    }
+
+      const updatedContentSubmisson = await ContentSubmission.findByIdAndUpdate(contentSubmissionId,{$set:dataToUpdate})
+      return updatedContentSubmisson 
+    }
+
+    const dataToUpdate  = {
+      userId:user.userId,
+      name,
+      title,
+      facebook,
+      instagram,
+      thread,
+      xlink,
+      website,
+      selectedPreviews: JSON.parse(selectedPreviews), 
+    }
+    const updatedContentSubmisson = await ContentSubmission.findByIdAndUpdate(contentSubmissionId,{$set:dataToUpdate})
+    return updatedContentSubmisson 
+}
