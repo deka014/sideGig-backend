@@ -7,6 +7,7 @@ const authService = require('../services/authService');
 // @desc    Send OTP to the user's phone number
 // @access  Public
 router.post('/send-otp', async (req, res) => {
+    console.log('In /send-otp')
     const { phoneNumber } = req.body;
     try {
         const result = await authService.sendOtp(phoneNumber);
