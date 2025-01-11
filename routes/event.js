@@ -3,6 +3,8 @@ const router = express.Router();
 const authService = require('../services/authService');
 const { createEvent, updateEvent, getEvents, getOneEvent, updateEventDesign } = require('../services/eventService');
 const { getUpcomingEventsWithRandomDesign } = require('../services/eventService');
+const { verifyToken } = require('../middleware/authMiddleware');
+const checkPaymentStatus  = require('../commons/functions/checkPaymentStatus');
 
 router.post('/events',async (req,res) => {
   try {
@@ -70,13 +72,17 @@ router.patch('/event/:id/addDesign', async(req,res) => {
   }
 })
 // get all events from current date to next 30 events
-router.get('/upcoming-events', async (req, res) => {
+router.get('/upcoming-events', verifyToken ,async (req, res, next) => {
   try {
+    const userId  = req.user.userId;
+    await checkPaymentStatus(userId);
+
     const events = await getUpcomingEventsWithRandomDesign();
     res.status(200).json(events);
   } catch (error) {
-    console.error('Error fetching events:', error);
-    res.status(500).json({ message: 'Internal Server Error' });
+    // console.error('Error fetching events:', error);
+    // res.status(500).json({ message: 'Internal Server Error' });
+    next(error);
   }
 });
 
