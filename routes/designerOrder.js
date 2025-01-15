@@ -1,13 +1,13 @@
 const express = require('express');
 const router = express.Router();
-const { verifyToken } = require('../middleware/authMiddleware');
+const { verifyToken, verifyDesigner } = require('../middleware/authMiddleware');
 const { getAssignedOrderWithLatestContentSubmission, getPendingOrdersForDesigner,getAvailableOrdersForDesigner, acceptOrderForDesigners, getCompletedOrdersForDesigners, updateOrderPreviewUrl, updateStatus} = require('../services/designerOrderService');
 
 
 // for designers 
 
 // Get available orders
-router.get('/available-orders', verifyToken, async (req, res) => {
+router.get('/available-orders', verifyToken, verifyDesigner, async (req, res) => {
   try {
     const orders = await getAvailableOrdersForDesigner();
     res.status(200).json(orders);
@@ -18,7 +18,7 @@ router.get('/available-orders', verifyToken, async (req, res) => {
 });
 
 // Accept an order
-router.post('/accept-order/:orderId', verifyToken, async (req, res) => {
+router.post('/accept-order/:orderId', verifyToken,verifyDesigner, async (req, res) => {
   try {
     const { orderId } = req.params;
     const {userId} = req.user; // Extract designer ID from JWT
@@ -32,7 +32,7 @@ router.post('/accept-order/:orderId', verifyToken, async (req, res) => {
 });
 
 // Get all pending orders for a designer
-router.get('/pending-orders', verifyToken, async (req, res) => {
+router.get('/pending-orders', verifyToken, verifyDesigner, async (req, res) => {
   try {
     const {userId} = req.user // Designer ID from JWT
     const orders = await getPendingOrdersForDesigner(userId);
@@ -49,7 +49,7 @@ router.get('/pending-orders', verifyToken, async (req, res) => {
 });
 
 // Get all completed orders for a designer
-router.get('/completed-orders', verifyToken, async (req, res) => {
+router.get('/completed-orders', verifyToken, verifyDesigner, async (req, res) => {
   try {
     const designerId = req.user.userId; // Designer ID from JWT
     
@@ -67,14 +67,18 @@ router.get('/completed-orders', verifyToken, async (req, res) => {
 });
 
 // route for designer to get order details
-router.get('/order/:orderId', verifyToken, async (req, res) => {
+router.get('/order/:orderId', verifyToken, verifyDesigner, async (req, res) => {
   try {
     const {userId} = req.user; // Extract designer ID from JWT
     const { orderId } = req.params;
     const id = orderId.replace(':','');
-    
+    let isAdmin = false;
+
+    if(req.user.access == 'admin'){
+      isAdmin = true;
+    }
     // Fetch the order and ensure the designer is assigned
-    const order = await getAssignedOrderWithLatestContentSubmission(id, userId);
+    const order = await getAssignedOrderWithLatestContentSubmission(id, userId,isAdmin);
 
     if (!order) {
       return res.status(403).json({ message: 'You are not authorized to view this order.' });
@@ -88,7 +92,7 @@ router.get('/order/:orderId', verifyToken, async (req, res) => {
 });
 
 //route to update the OrderPreviewUrl
-router.patch('/view-order/update-orderPreviewUrl/:orderId',verifyToken, async (req,res) => {
+router.patch('/view-order/update-orderPreviewUrl/:orderId',verifyToken,verifyDesigner, async (req,res) => {
   try {
     const {orderId} = req.params;
     const id = orderId.replace(':','');
@@ -107,7 +111,7 @@ router.patch('/view-order/update-orderPreviewUrl/:orderId',verifyToken, async (r
 })
 
 //route to update the status
-router.patch('/view-order/update-status/:orderId',verifyToken, async (req,res) => {
+router.patch('/view-order/update-status/:orderId',verifyToken,verifyDesigner, async (req,res) => {
   try {
     const {orderId} = req.params;
     const id = orderId.replace(':','');

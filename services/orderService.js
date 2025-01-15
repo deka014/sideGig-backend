@@ -143,16 +143,26 @@ exports.getUserOrders = async (userId) => {
 };
 
 
-exports.viewOrder = async (orderId, userId) => {
+exports.viewOrder = async (orderId, userId, isAdmin) => {
   try {
+    // Validate orderId
     if (!mongoose.Types.ObjectId.isValid(orderId)) {
       throw new Error('Invalid Order ID');
     }
 
-    const order = await Order.findOne({ _id: orderId}) // Use _id for MongoDB ObjectId
+    // Build the query condition
+    const query = { _id: orderId }; // Always check by orderId
+    if (!isAdmin) {
+      // If not an admin, ensure the order belongs to the user
+      query.userId = userId;
+    }
+
+    // Fetch the order
+    const order = await Order.findOne(query)
       .populate('selectedDesigns.designId', 'title imageUrl description') // Populate design details
       .exec();
 
+    // Check if the order exists
     if (!order) {
       throw new Error('Order not found or access denied');
     }
@@ -163,4 +173,63 @@ exports.viewOrder = async (orderId, userId) => {
     throw error;
   }
 };
+
+
+// for admin only + pagination
+
+exports.getAllOrders = async (page, limit = 10) => {
+  try {
+    const orders = await Order.find().populate('assignee', 'phoneNumber').populate('userId', 'phoneNumber')
+      .sort({ createdAt: -1 })
+      .select('-selectedDesigns')  // Sort by createdAt descending
+      .skip((page - 1) * limit) // Skip to the correct page
+      .limit(limit); // Limit the number of results per page
+
+    console.log('Orders fetched:', orders);
+
+    return orders;
+  } catch (error) {
+    console.error('Error fetching orders:', error);
+    throw new Error( 'Failed to fetch orders');
+  }
+}
+
+
+
+// for admin all pending orders for all designers assignee is not null , status: 'Confirmed' 
+// get the assignee name from user 
+exports.getAllPendingOrdersFromDesigners = async () => {
+  try {
+    const orders = await Order.find({status: 'Confirmed' } , {selectedDesigns : 0}).populate('assignee', 'phoneNumber')
+      .sort({ createdAt: -1 }).exec() // Sort by createdAt descending
+
+    return orders;
+  } catch (error) {
+    console.error('Error fetching orders:', error);
+    throw new Error( 'Failed to fetch orders');
+  }
+}
+
+// get all completed orders with pagination 
+
+exports.getAllCompletedOrders = async (page, limit = 30) => {
+  try {
+    const orders = await Order.find({status: 'Delivered' }, {selectedDesigns : 0})
+      .sort({ createdAt: -1 }) // Sort by createdAt descending
+      .skip((page - 1) * limit) // Skip to the correct page
+      .limit(limit); // Limit the number of results per page
+
+    console.log('Orders fetched:', orders);
+
+    return orders;
+  } catch (error) {
+    console.error('Error fetching orders:', error);
+    throw new Error( 'Failed to fetch orders');
+  }
+}
+
+
+
+
+
 

@@ -1,6 +1,5 @@
 const ContentSubmission = require("../models/ContentSubmission");
 const { uploadImageToCloudinary } = require("./imageService");
-const checkUserPaymentStatus  = require("../commons/functions/checkPaymentStatus");
 
 function validateContentSubmissionData(bodyData) {
   const {title,name} = bodyData
@@ -16,7 +15,7 @@ function validateContentSubmissionData(bodyData) {
 exports.createContentSubmission = async (bodyData,files,user) => {
   validateContentSubmissionData(bodyData);
   // check if user payment status is true 
-  await checkUserPaymentStatus(user.userId);
+  // await checkUserPaymentStatus(user.userId);
   const {
     name,
     title,

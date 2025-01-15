@@ -14,6 +14,7 @@ exports.verifyToken = (req, res, next) => {
     // Extract token from header
     token = req.headers.authorization.split(' ')[1];
   }
+  console.log(token);
   if (!token) {
     return res.status(401).json({ success: false, error: 'Not authorized' });
   }
@@ -30,4 +31,27 @@ exports.verifyToken = (req, res, next) => {
   }
 };
 
+
+
+// Middleware to check admin access
+exports.verifyAdmin = (req, res, next) => {
+  if (req.user.access !== 'admin') {
+    return res.status(403).json({ message: 'Access denied. Admins only.' });
+  }
+  next();
+};
+
+
+// Middleware to check designer access but admin have access too
+exports.verifyDesigner = (req, res, next) => {
+
+  if(req.user.access === 'admin'){
+   return next()
+  }
+  
+  if (req.user.access !== 'designer') {
+    return res.status(403).json({ message: 'Access denied. Designers only.' });
+  }
+  next();
+};
 

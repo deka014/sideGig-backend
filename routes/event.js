@@ -3,10 +3,10 @@ const router = express.Router();
 const authService = require('../services/authService');
 const { createEvent, updateEvent, getEvents, getOneEvent, updateEventDesign } = require('../services/eventService');
 const { getUpcomingEventsWithRandomDesign } = require('../services/eventService');
-const { verifyToken } = require('../middleware/authMiddleware');
-const checkPaymentStatus  = require('../commons/functions/checkPaymentStatus');
+const { verifyToken,verifyAdmin } = require('../middleware/authMiddleware');
+const checkUserPaymentStatus = require('../middleware/checkUserPaymentStatus');
 
-router.post('/events',async (req,res) => {
+router.post('/events',verifyToken, verifyAdmin, async (req,res) => {
   try {
     console.log('events data',req.body)
     const event = await createEvent(req.body)
@@ -17,7 +17,7 @@ router.post('/events',async (req,res) => {
   }
 })
 
-router.get('/events',async (req,res) => {
+router.get('/events',verifyToken, verifyAdmin,async (req,res) => {
   try {
     const response = await getEvents(req.query)
     res.status(200).json({success:true,events:response.events})
@@ -27,7 +27,7 @@ router.get('/events',async (req,res) => {
   }
 })
 
-router.get('/event/:id', async (req,res) => {
+router.get('/event/:id', verifyToken , verifyAdmin , async (req,res) => {
   console.log('we are here /event')
   try {
     console.log(req.params)
@@ -43,7 +43,7 @@ router.get('/event/:id', async (req,res) => {
 }
 )
 
-router.put('/events:eventId', async (req,res) => {
+router.put('/events:eventId',  verifyToken , verifyAdmin , async (req,res) => {
   try {
     const { eventId } = req.params;
     const response = await updateEvent(eventId,req.body)
@@ -54,7 +54,7 @@ router.put('/events:eventId', async (req,res) => {
   }
 })
 
-router.patch('/event/:id/addDesign', async(req,res) => {
+router.patch('/event/:id/addDesign', verifyToken , verifyAdmin , async(req,res) => {
   try {
     console.log('in /event/:id/addDesign')
     const {id} = req.params;
@@ -72,11 +72,9 @@ router.patch('/event/:id/addDesign', async(req,res) => {
   }
 })
 // get all events from current date to next 30 events
-router.get('/upcoming-events', verifyToken ,async (req, res, next) => {
+router.get('/upcoming-events', verifyToken , checkUserPaymentStatus, async (req, res, next) => {
   try {
     const userId  = req.user.userId;
-    await checkPaymentStatus(userId);
-
     const events = await getUpcomingEventsWithRandomDesign();
     res.status(200).json(events);
   } catch (error) {

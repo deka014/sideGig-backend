@@ -35,7 +35,8 @@ exports.verifyOtp = async (phoneNumber, otp) => {
       const tokenPayload = {
         userId: user._id,
         selectedPackage: user.selectedPackage,
-        paymentStatus : user.paymentStatus
+        paymentStatus : user.paymentStatus,
+        access: user.access
       };
 
       const token = jwt.sign(tokenPayload, process.env.JWT_SECRET, {
