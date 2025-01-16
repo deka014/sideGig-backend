@@ -2,7 +2,8 @@ const express = require('express');
 const router = express.Router();
 
 const { verifyToken, verifyAdmin } = require('../middleware/authMiddleware');
-const { getAllOrders ,getAllPendingOrdersFromDesigners , getAllCompletedOrders} = require('../services/orderService');
+const { getAllOrders} = require('../services/orderService');
+const { getUsersBasedOnAccess} = require('../services/userService');
 
 // can access http://localhost:3000/creative-select - Done  
 // can access http://localhost:3000/delivery/available-orders - Done
@@ -18,20 +19,11 @@ const { getAllOrders ,getAllPendingOrdersFromDesigners , getAllCompletedOrders} 
 router.get('/all-orders',verifyToken,verifyAdmin, async (req, res, next) => {
     try {
         const page = parseInt(req.query.page) || 1;
-        const orders = await getAllOrders(page);
-        res.status(200).json(orders);
-    } catch (error) {
-        console.error('Error fetching orders:', error);
-        next(error);
-    }
-    });
-
-// get all pending orders from designers 
-
-router.get('/all-pending-orders',verifyToken,verifyAdmin, async (req, res, next) => {
-    try {
-        const orders = await getAllPendingOrdersFromDesigners();
-        res.status(200).json(orders);
+        const status = req.query.status.trim();
+        const userId = req.query.userId.trim();
+        const assigneeId = req.query.assigneeId;
+        const orders = await getAllOrders(page,status,userId,assigneeId);
+        res.status(200).json({orders});
     } catch (error) {
         console.error('Error fetching orders:', error);
         next(error);
@@ -39,16 +31,22 @@ router.get('/all-pending-orders',verifyToken,verifyAdmin, async (req, res, next)
     });
 
 
-router.get('/all-completed-orders',verifyToken,verifyAdmin, async (req, res, next) => {
+// get all users 
+
+// add pagination to the orders
+router.get('/all-users',verifyToken,verifyAdmin, async (req, res, next) => {
     try {
         const page = parseInt(req.query.page) || 1;
-        const orders = await getAllCompletedOrders(page);
-        res.status(200).json(orders);
+        const access = req.query.access;
+        const users = await getUsersBasedOnAccess(page,access);
+        res.status(200).json({users});
     } catch (error) {
-        console.error('Error fetching orders:', error);
+        console.error('Error fetching users:', error);
         next(error);
     }
-    }
-    );
+    });
+
+
+
     
 module.exports = router;   

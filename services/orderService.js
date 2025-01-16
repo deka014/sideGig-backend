@@ -177,12 +177,30 @@ exports.viewOrder = async (orderId, userId, isAdmin) => {
 
 // for admin only + pagination
 
-exports.getAllOrders = async (page, limit = 10) => {
+exports.getAllOrders = async (page, status, userId, assigneeId, limit = 10) => {
   try {
-    const orders = await Order.find().populate('assignee', 'phoneNumber').populate('userId', 'phoneNumber')
-      .sort({ createdAt: -1 })
-      .select('-selectedDesigns')  // Sort by createdAt descending
-      .skip((page - 1) * limit) // Skip to the correct page
+    const filter = {}; // Initialize an empty filter object
+    // capi is the status of the order
+    status = status && status.charAt(0).toUpperCase() + status.slice(1); // Capitalize the status
+    // If a status is provided, add it to the filter
+    if (status && status !== 'All') {
+      filter.status = status;
+    }
+    if (userId && userId !== 'all' && userId !== '') {
+      filter.userId = userId; ;
+    };
+    if (assigneeId && assigneeId !== 'all' && assigneeId !== '') {
+      filter.assignee = assigneeId;
+    };
+    console.log(filter);
+
+    // Fetch orders with filtering, pagination, and sorting
+    const orders = await Order.find(filter)
+      .populate('assignee', 'phoneNumber') // Populate assignee field
+      .populate('userId', 'phoneNumber') // Populate userId field
+      .sort({ createdAt: -1 }) // Sort by creation date descending
+      .select('-selectedDesigns') // Exclude selectedDesigns field
+      .skip((page - 1) * limit) // Skip records for pagination
       .limit(limit); // Limit the number of results per page
 
     console.log('Orders fetched:', orders);
@@ -190,9 +208,10 @@ exports.getAllOrders = async (page, limit = 10) => {
     return orders;
   } catch (error) {
     console.error('Error fetching orders:', error);
-    throw new Error( 'Failed to fetch orders');
+    throw new Error('Failed to fetch orders');
   }
-}
+};
+
 
 
 
