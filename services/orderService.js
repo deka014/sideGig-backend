@@ -143,16 +143,26 @@ exports.getUserOrders = async (userId) => {
 };
 
 
-exports.viewOrder = async (orderId, userId) => {
+exports.viewOrder = async (orderId, userId, isAdmin) => {
   try {
+    // Validate orderId
     if (!mongoose.Types.ObjectId.isValid(orderId)) {
       throw new Error('Invalid Order ID');
     }
 
-    const order = await Order.findOne({ _id: orderId}) // Use _id for MongoDB ObjectId
+    // Build the query condition
+    const query = { _id: orderId }; // Always check by orderId
+    if (!isAdmin) {
+      // If not an admin, ensure the order belongs to the user
+      query.userId = userId;
+    }
+
+    // Fetch the order
+    const order = await Order.findOne(query)
       .populate('selectedDesigns.designId', 'title imageUrl description') // Populate design details
       .exec();
 
+    // Check if the order exists
     if (!order) {
       throw new Error('Order not found or access denied');
     }
@@ -163,4 +173,82 @@ exports.viewOrder = async (orderId, userId) => {
     throw error;
   }
 };
+
+
+// for admin only + pagination
+
+exports.getAllOrders = async (page, status, userId, assigneeId, limit = 10) => {
+  try {
+    const filter = {}; // Initialize an empty filter object
+    // capi is the status of the order
+    status = status && status.charAt(0).toUpperCase() + status.slice(1); // Capitalize the status
+    // If a status is provided, add it to the filter
+    if (status && status !== 'All') {
+      filter.status = status;
+    }
+    if (userId && userId !== 'all' && userId !== '') {
+      filter.userId = userId; ;
+    };
+    if (assigneeId && assigneeId !== 'all' && assigneeId !== '') {
+      filter.assignee = assigneeId;
+    };
+    console.log(filter);
+
+    // Fetch orders with filtering, pagination, and sorting
+    const orders = await Order.find(filter)
+      .populate('assignee', 'phoneNumber') // Populate assignee field
+      .populate('userId', 'phoneNumber') // Populate userId field
+      .sort({ createdAt: -1 }) // Sort by creation date descending
+      .select('-selectedDesigns') // Exclude selectedDesigns field
+      .skip((page - 1) * limit) // Skip records for pagination
+      .limit(limit); // Limit the number of results per page
+
+    console.log('Orders fetched:', orders);
+
+    return orders;
+  } catch (error) {
+    console.error('Error fetching orders:', error);
+    throw new Error('Failed to fetch orders');
+  }
+};
+
+
+
+
+// for admin all pending orders for all designers assignee is not null , status: 'Confirmed' 
+// get the assignee name from user 
+exports.getAllPendingOrdersFromDesigners = async () => {
+  try {
+    const orders = await Order.find({status: 'Confirmed' } , {selectedDesigns : 0}).populate('assignee', 'phoneNumber')
+      .sort({ createdAt: -1 }).exec() // Sort by createdAt descending
+
+    return orders;
+  } catch (error) {
+    console.error('Error fetching orders:', error);
+    throw new Error( 'Failed to fetch orders');
+  }
+}
+
+// get all completed orders with pagination 
+
+exports.getAllCompletedOrders = async (page, limit = 30) => {
+  try {
+    const orders = await Order.find({status: 'Delivered' }, {selectedDesigns : 0})
+      .sort({ createdAt: -1 }) // Sort by createdAt descending
+      .skip((page - 1) * limit) // Skip to the correct page
+      .limit(limit); // Limit the number of results per page
+
+    console.log('Orders fetched:', orders);
+
+    return orders;
+  } catch (error) {
+    console.error('Error fetching orders:', error);
+    throw new Error( 'Failed to fetch orders');
+  }
+}
+
+
+
+
+
 

@@ -70,21 +70,30 @@ exports.acceptOrderForDesigners = async (orderId, designerId) => {
   }
 };
 
-
-exports.getAssignedOrderWithLatestContentSubmission = async (orderId, designerId) => {
+exports.getAssignedOrderWithLatestContentSubmission = async (orderId, designerId, isAdmin = false) => {
   try {
-    // Fetch the order to verify ownership and retrieve relevant details
-    const order = await Order.findOne({
-      _id: orderId,
-      assignee: designerId, // Verify the designer is assigned
-    })
+    // Validate orderId
+    if (!mongoose.Types.ObjectId.isValid(orderId)) {
+      throw new Error('Invalid Order ID');
+    }
+
+    // Build the query condition
+    const query = { _id: orderId }; // Always filter by orderId
+    if (!isAdmin) {
+      // If not an admin, ensure the designer is assigned to the order
+      query.assignee = designerId;
+    }
+
+    // Fetch the order
+    const order = await Order.findOne(query)
       .select('orderId userId selectedDesigns createdAt estimatedDeliveryDate status orderPreviewUrl')
       .populate({
         path: 'selectedDesigns.designId',
         select: 'title imageUrl description',
       })
       .lean();
-    
+
+    // Check if the order exists
     if (!order) {
       return null; // Return null if the order is not found or the designer is not assigned
     }
@@ -104,6 +113,7 @@ exports.getAssignedOrderWithLatestContentSubmission = async (orderId, designerId
     throw new Error('Failed to fetch order details.');
   }
 };
+
 
 
 //to update orderPreviewUrl

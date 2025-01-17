@@ -90,9 +90,13 @@ router.get('/user-orders', verifyToken, async (req, res) => {
 router.get('/view-order/:orderId', verifyToken, async (req, res) => {
   try {
     const {userId} = req.user // Extract user ID from JWT token
+    let isAdmin = false;
+    if(req.user.access == 'admin'){
+      isAdmin = true;
+    }
     const { orderId } = req.params; // Get orderId from the URL
-    console.log(orderId);
-    const order = await viewOrder(orderId, userId);
+   
+    const order = await viewOrder(orderId, userId, isAdmin);
 
     res.status(200).json({
       message: 'Order fetched successfully',
@@ -103,8 +107,7 @@ router.get('/view-order/:orderId', verifyToken, async (req, res) => {
     res.status(403).json({ message: error.message });
   }
 });
-
-
+ 
 
 
 module.exports = router;

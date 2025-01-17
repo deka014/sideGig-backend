@@ -11,9 +11,11 @@ function validateContentSubmissionData(bodyData) {
   }
 }
 
-exports.createContentSubmission = async(bodyData,files,user) => {
-  validateContentSubmissionData(bodyData);
 
+exports.createContentSubmission = async (bodyData,files,user) => {
+  validateContentSubmissionData(bodyData);
+  // check if user payment status is true 
+  // await checkUserPaymentStatus(user.userId);
   const {
     name,
     title,

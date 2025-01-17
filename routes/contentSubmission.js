@@ -4,6 +4,7 @@ const { createContentSubmission } = require("../services/contentSubmissionServic
 const fs = require('fs');
 const path = require('path');
 const upload = require("../middleware/multerMiddleware");
+const checkUserPaymentStatus = require("../middleware/checkUserPaymentStatus");
 
 const router = express.Router();
 
@@ -15,7 +16,7 @@ if (!fs.existsSync(uploadFolder)) {
 }
 
 
-router.post('/content-submission', verifyToken, upload.fields([{ name: 'logo' }, { name: 'photo' }]), 
+router.post('/content-submission', verifyToken, checkUserPaymentStatus, upload.fields([{ name: 'logo' }, { name: 'photo' }]), 
   async(req,res) => {
     
     console.log('Content-Type:', req.headers['content-type']);

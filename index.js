@@ -10,6 +10,8 @@ const contentSubmissionRoute = require('./routes/contentSubmission'); //contentS
 const orderRoute = require('./routes/order');  //orderRoute
 const eventRoute = require('./routes/event')
 const designerOrder = require('./routes/designerOrder')
+const admin = require('./routes/admin')
+const errorHandler = require('./middleware/errorHandlerMiddleware');
 var cors = require('cors')
 
 
@@ -31,6 +33,15 @@ app.use('/api', contentSubmissionRoute) //contentSubmission
 app.use('/api', orderRoute);   //order
 app.use('/api',eventRoute); //event
 app.use('/api/delivery',designerOrder); //event
+
+//admin routes
+app.use('/api/admin',admin); //event
+
+
+
+// Centralized error handler
+app.use(errorHandler);
+
 // Connect to MongoDB
 mongoose
   .connect(process.env.MONGO_URI, {
