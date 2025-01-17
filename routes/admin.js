@@ -21,7 +21,7 @@ router.get('/all-orders',verifyToken,verifyAdmin, async (req, res, next) => {
         const page = parseInt(req.query.page) || 1;
         const status = req.query.status.trim();
         const userId = req.query.userId.trim();
-        const assigneeId = req.query.assigneeId;
+        const assigneeId = req.query.assigneeId.trim();
         const orders = await getAllOrders(page,status,userId,assigneeId);
         res.status(200).json({orders});
     } catch (error) {
