@@ -70,4 +70,30 @@ router.get('/check-payment-status', verifyToken, async (req, res) => {
   }
 });
 
+router.get('/check-package', verifyToken, async (req, res) => {
+  try {
+    const userId = req.user.userId; // Extracted from JWT
+    const user = await User.findById(userId);
+
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: 'User not found.',
+      });
+    }
+
+    res.status(200).json({
+      success: true,
+      selectedPackage: user.selectedPackage,
+    });
+    
+  } catch (error) {
+    console.error('Error checking package status:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Internal server error.',
+    });
+  }
+});
+
 module.exports = router;
