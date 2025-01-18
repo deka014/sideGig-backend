@@ -6,38 +6,33 @@ const authService = require('../services/authService');
 // @route   POST /api/auth/send-otp
 // @desc    Send OTP to the user's phone number
 // @access  Public
-router.post('/send-otp', async (req, res) => {
+router.post('/send-otp', async (req, res , next) => {
     const { phoneNumber } = req.body;
     try {
         const result = await authService.sendOtp(phoneNumber);
         return res.status(200).json(result); // Return response to client
     } catch (error) {
-        console.error('Error in sendOtp controller:', error);
-        return res.status(500).json({ success: false, error: 'Server Error' });
+        next(error);
     }
 });
 
 // @route   POST /api/auth/verify-otp
 // @desc    Verify OTP and authenticate user
 // @access  Public
-router.post('/verify-otp', async (req, res) => {
+router.post('/verify-otp', async (req, res,next) => {
     const { phoneNumber, otp } = req.body;
     try {
         const { user, token } = await authService.verifyOtp(phoneNumber, otp);
-        // save the user 
-
+        // save the user after successful verification
         return res.status(200).json({
             success: true,
             token,
             data: {
                 userId: user._id,
-                // access: user.access,                                
-                // phoneNumber: user.phoneNumber,
             },
         }); // Return response to client
     } catch (error) {
-        console.error('Error in verifyOtp controller:', error);
-        return res.status(400).json({ success: false, error: error.message });
+        next(error);
     }
 });
 

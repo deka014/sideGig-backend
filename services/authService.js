@@ -2,6 +2,7 @@
 const jwt = require('jsonwebtoken');
 const dotenv = require('dotenv');
 const User = require('../models/Users');
+const AppError = require('../customExceptions/AppError');
 
 dotenv.config();
 
@@ -16,6 +17,13 @@ const OTP_EXPIRATION_TIME = 5 * 60 * 1000; // 5 minutes
 
 exports.verifyOtp = async (phoneNumber, otp) => {
   try {
+    
+    if (!/^\d{10}$/.test(phoneNumber)) {
+      throw new AppError('Invalid phone number. It must be exactly 10 digits.', 400);
+    }
+
+    console.log('verifyOtp is running for:', phoneNumber);
+
     if (
       phoneNumber in otpStorage &&
       otpStorage[phoneNumber].otp === otp &&
@@ -23,7 +31,6 @@ exports.verifyOtp = async (phoneNumber, otp) => {
     ) {
       // OTP is valid; remove it from storage
       delete otpStorage[phoneNumber];
-
       // Check if user already exists, if not, create a new one
       let user = await User.findOne({ phoneNumber });
       if (!user) {
@@ -45,16 +52,21 @@ exports.verifyOtp = async (phoneNumber, otp) => {
 
       return { user, token }; // Return the user object and the token
     } else {
-      throw new Error('Invalid or expired OTP');
+      throw new AppError('Invalid OTP or Expired', 400);
     }
   } catch (error) {
-    console.error('Error in verifyOtp:', error);
-    throw new Error(error.message || 'Could not verify OTP');
+    console.log('Error in verifyOtp service');
+    throw error;
   }
 };
 
 exports.sendOtp = async (phoneNumber) => {
   try {
+    if (!/^\d{10}$/.test(phoneNumber)) {
+      const err = new Error(`Invalid phone number = ${phoneNumber}. It must be exactly 10 digits.`);
+      err.status = 400;
+      throw new AppError('Invalid phone number. It must be exactly 10 digits.', 400);
+    }
     console.log('sendOtp is running for:', phoneNumber);
     // const otp = generateOtp();
     // TEST
@@ -63,12 +75,13 @@ exports.sendOtp = async (phoneNumber) => {
     otpStorage[phoneNumber] = { otp, expiresAt };
 
     // Simulate sending OTP (replace with actual SMS service in production)
-    console.log(`OTP for ${phoneNumber}: ${otp}`);
+    console.log(`OTP for ${phoneNumber} successfully sent: ${otp}`);
     return { success: true, message: 'OTP sent successfully' };
 
   } catch (error) {
-    console.error('Error in sendOtp controller:', error);
-    throw new Error('Could not send OTP');
+    console.error('Error in sendOtp service');
+    throw error;
+
   }
 };
 
