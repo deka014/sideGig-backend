@@ -1,3 +1,4 @@
+const AppError = require("../customExceptions/AppError");
 const ContentSubmission = require("../models/ContentSubmission");
 const { uploadImageToCloudinary } = require("./imageService");
 
@@ -57,4 +58,17 @@ exports.createContentSubmission = async (bodyData,files,user) => {
   })
   const savedContent = await newContentSubmission.save();
   return savedContent 
+}
+
+
+exports.getLatestContentSubmissionSelectedPreview  = async (userId) => {
+  // only need the latest selected preview
+  const contentSubmission = await ContentSubmission.findOne({userId}).sort({createdAt:-1}).select('selectedPreviews');
+  if(!contentSubmission) {
+    throw new AppError('Content submission not found for the user', 400);
+  }
+  if (!contentSubmission.selectedPreviews || contentSubmission.selectedPreviews.length === 0) {
+    throw new AppError('Selected frames not found in the content submission', 400);
+  }
+  return contentSubmission.selectedPreviews
 }

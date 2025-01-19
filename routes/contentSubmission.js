@@ -1,10 +1,11 @@
 const express = require("express");
 const { verifyToken } = require("../middleware/authMiddleware");
-const { createContentSubmission } = require("../services/contentSubmissionService");
+const { createContentSubmission , getLatestContentSubmissionSelectedPreview } = require("../services/contentSubmissionService");
 const fs = require('fs');
 const path = require('path');
 const upload = require("../middleware/multerMiddleware");
 const checkUserPaymentStatus = require("../middleware/checkUserPaymentStatus");
+
 
 const router = express.Router();
 
@@ -46,6 +47,17 @@ router.post('/content-submission', verifyToken, checkUserPaymentStatus, upload.f
   } catch (error) {
     console.error('Error submitting content:', error);
     res.status(500).json({ error: error.message });
+  }
+})
+
+
+router.get('/content-submission-selected-preview', verifyToken, async(req,res,next) => {
+  try {
+    const {userId} = req.user;
+    const response = await getLatestContentSubmissionSelectedPreview(userId);
+    res.status(200).json(response);
+  } catch (error) {
+    next(error);
   }
 })
 

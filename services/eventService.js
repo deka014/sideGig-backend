@@ -138,26 +138,92 @@ exports.updateEvent = async (eventId, body) => {
 };
 
 
-exports.getUpcomingEventsWithRandomDesign = async () => {
-  const currentDate = new Date();
+exports.getUpcomingEventsWithRandomDesign = async (fromDate = new Date()) => {
 
+  console.log('Fetching upcomming events from Current date in IST:', fromDate);
   // Fetch events for the next 30 days with non-empty designs array
-  const events = await Event.find({
-    eventDate: { $gte: currentDate },
-    designs: { $exists: true, $ne: [] }, // Ensure designs array exists and is not empty
-  })
-    .sort({ eventDate: 1 }) // Sort by event date
-    .limit(30) // Limit to 30 events
-    .populate({
-      path: 'designs',
-      match: { status: 'available' }, // Only fetch designs with status 'available'
-    });
+  //@deprecated call test for better
+
+  // const events = await Event.find({
+  //   eventDate: { $gte: fromDate }, // Fetch events from current date onwards
+  //   designs: { $exists: true, $ne: [] }, // Ensure designs array exists and is not empty
+  // })
+  //   .sort({ eventDate: 1 }) // Sort by event date
+  //   .limit(40) // Limit to 30 events
+  //   .populate({
+  //     path: 'designs',
+  //     match: { status: 'available' , selectedCount : {$lt : 15} }, // Only fetch designs with status 'available' and selectedCount less than 15
+  //   });
+  
+    const events = await Event.aggregate([
+      {
+        $match: {
+          eventDate: { $gte: fromDate }, // Events from current date onwards
+          designs: { $exists: true, $ne: [] }, // Ensure designs array exists and is not empty
+        },
+      },
+      {
+        $lookup: {
+          from: 'designs', // Collection to join (Design schema)
+          localField: 'designs', 
+          foreignField: '_id',
+          as: 'filteredDesigns',
+        },
+      },
+      {
+        $addFields: {
+          filteredDesigns: {
+            $filter: {
+              input: '$filteredDesigns',
+              as: 'design',
+              cond: {
+                $and: [
+                  { $eq: ['$$design.status', 'available'] }, // Design status is 'available'
+                  { $lt: ['$$design.selectedCount', 15] },   // selectedCount < 15
+                ],
+              },
+            },
+          },
+        },
+      },
+      {
+        $match: {
+          'filteredDesigns.0': { $exists: true }, // Retain only events with at least one matching design
+        },
+      },
+      {
+        $sort: { eventDate: 1 }, // Sort by event date
+      },
+      {
+        $limit: 30, // Limit to 30 events
+      },
+      {
+        $project: {
+          // only add some fields from filteredDesigns
+          _id :1,
+          title: 1,
+          description: 1,
+          eventDate: 1,
+          filteredDesigns: {
+            _id: 1,
+            title: 1,
+            imageUrl: 1,
+            description: 1,
+            selectedCount: 1,
+          },
+          // designs: 0, // Exclude original designs array
+        },
+      },
+    ]);
+    
+    console.log('Events with filtered designs:', JSON.stringify(events, null, 2));
+    
 
   // Process each event and select a random design
 
   const eventsWithRandomDesigns = events
     .map((event) => {
-      const availableDesigns = event.designs;
+      const availableDesigns = event.filteredDesigns;
 
       // Select a random design
       const randomDesign =

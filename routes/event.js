@@ -75,11 +75,13 @@ router.patch('/event/:id/addDesign', verifyToken , verifyAdmin , async(req,res) 
 router.get('/upcoming-events', verifyToken , checkUserPaymentStatus, async (req, res, next) => {
   try {
     const userId  = req.user.userId;
-    const events = await getUpcomingEventsWithRandomDesign();
+    const currentDate = new Date();
+    // Convert the current date to IST
+    const indianOffset = 5.5 * 60 * 60 * 1000; // IST is UTC+5:30
+    const istDate = new Date(currentDate.getTime() + indianOffset);
+    const events = await getUpcomingEventsWithRandomDesign(istDate);
     res.status(200).json(events);
   } catch (error) {
-    // console.error('Error fetching events:', error);
-    // res.status(500).json({ message: 'Internal Server Error' });
     next(error);
   }
 });
