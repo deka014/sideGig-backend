@@ -80,7 +80,7 @@ exports.placeOrder = async (userId, selectedDesigns, price, additionalInfo) => {
       design.selectedCount = (design.selectedCount || 0) + 1;
 
       // Update status if selectedCount exceeds 20
-      if (design.selectedCount > 20) {
+      if (design.selectedCount > 15) {
         design.status = 'unavailable';
       }
 

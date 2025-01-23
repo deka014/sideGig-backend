@@ -43,16 +43,16 @@ router.get('/event/:id', verifyToken , verifyAdmin , async (req,res) => {
 }
 )
 
-router.put('/events:eventId',  verifyToken , verifyAdmin , async (req,res) => {
-  try {
-    const { eventId } = req.params;
-    const response = await updateEvent(eventId,req.body)
-    res.status(200).json({success:true, message:'Resource updated successfully', updatedEvent: response.updatedEvent})
-  } catch (error) {
-    const statusCode = error.statusCode || 500
-    res.status(statusCode).json({message:'Error updating resource', error:error})
-  }
-})
+// router.put('/events:eventId',  verifyToken , verifyAdmin , async (req,res) => {
+//   try {
+//     const { eventId } = req.params;
+//     const response = await updateEvent(eventId,req.body)
+//     res.status(200).json({success:true, message:'Resource updated successfully', updatedEvent: response.updatedEvent})
+//   } catch (error) {
+//     const statusCode = error.statusCode || 500
+//     res.status(statusCode).json({message:'Error updating resource', error:error})
+//   }
+// })
 
 router.patch('/event/:id/addDesign', verifyToken , verifyAdmin , async(req,res) => {
   try {
@@ -81,6 +81,18 @@ router.get('/upcoming-events', verifyToken , checkUserPaymentStatus, async (req,
     const istDate = new Date(currentDate.getTime() + indianOffset);
     const events = await getUpcomingEventsWithRandomDesign(istDate);
     res.status(200).json(events);
+  } catch (error) {
+    next(error);
+  }
+});
+
+
+// edit event data except designs
+router.patch('/event/:eventId', verifyToken , verifyAdmin , async (req, res, next) => {
+  try {
+    const { eventId } = req.params;
+    const response = await updateEvent(eventId, req.body);
+    res.status(200).json(response);
   } catch (error) {
     next(error);
   }

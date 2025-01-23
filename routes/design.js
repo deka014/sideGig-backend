@@ -2,7 +2,7 @@
 const express = require('express');
 const router = express.Router();
 const designService = require('../services/designService');
-const { verifyToken } = require('../middleware/authMiddleware');
+const { verifyToken, verifyAdmin } = require('../middleware/authMiddleware');
 const jwt = require('jsonwebtoken');
 const Design = require('../models/Design');
 const { restart } = require('nodemon');
@@ -48,16 +48,15 @@ router.post('/designs', verifyToken, async (req,res) =>{
   }
 })
 
-router.put('/designs:designId',verifyToken, async (req,res) => {
+router.patch('/designs/:designId',verifyToken,verifyAdmin, async (req,res,next) => {
   try {
     const {body, user} = req;
     const {designId} = req.params;
 
     const response = await designService.updateDesign(designId,body,user);
-    res.status(200).json({success:true, message:'Resource updated successfully', updatedEvent: response.updatedDesign})
+    res.status(200).json(response);
   } catch (error) {
-    const statusCode = error.statusCode || 500;
-    res.status(statusCode).json({message:'Error updating resource', error:error})
+    next(error);
   }
 })
 module.exports = router;

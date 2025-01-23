@@ -3,6 +3,7 @@ const User = require('../models/Users');
 const Design = require('../models/Design');
 const { startOfMonth, endOfMonth, addMonths, parseISO, startOfDay, endOfDay, isWithinInterval, addDays } = require('date-fns');
 const { default: mongoose } = require('mongoose');
+const AppError = require('../customExceptions/AppError');
 
 exports.getDesignsByDate = async (userId = null, targetDate) => {
   const today = new Date();
@@ -102,30 +103,32 @@ exports.addDesign = async (data,user) => {
 exports.updateDesign = async (designId, updateData, user) => {
   
   try {
-    const id = designId.replace(':', '');
-    console.log(user)
-    console.log(id)
     
 /*Basic check for checking whether the current user is the same user who created the design.
   Any one except the user who created the design should not be allowed to perform PUT(update) request    
 */
-    const design = await Design.findById(id);
-    if(!design) {
-      throw {message:'Design not found',statusCode:404}
-    }
-    if(String(design.owner) !== String(user.userId)) {
-      throw {message:'User is not authorized for this operation!',statusCode:401}
-    }
+
+    // if(String(design.owner) !== String(user.userId)) {
+    //   throw {message:'User is not authorized for this operation!',statusCode:401}
+    // }
 
     // Update the design document
-    const updatedDesign = await Design.findByIdAndUpdate(id, updateData, {new: true});
+    // set the available fields to update
+    
+    const updatedDesign = await Design.findByIdAndUpdate(designId, updateData, {new: true});
 
-
-    return {updatedDesign};
-  } catch (error) {
-    if (error.name === 'ValidationError') {
-      throw { message: 'Validation error!', mongoDbResponse: error };
+    if (!updatedDesign) {
+      throw new AppError('Design not found', 404);
     }
+    const response = {
+      _id : updatedDesign._id,
+      maxSelections : updatedDesign.maxSelections,
+      selectedCount : updatedDesign.selectedCount,
+      status : updatedDesign.status
+    }
+
+    return response;
+  } catch (error) {
     throw error;
   }
 };

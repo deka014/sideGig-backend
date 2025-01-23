@@ -1,6 +1,7 @@
 const { default: mongoose } = require("mongoose");
 const Event = require("../models/Event");
 const { json } = require("body-parser");
+const AppError = require("../customExceptions/AppError");
 
 function validateCreateEventFileds(data) {
   const { title, description, eventDate } = data;
@@ -85,13 +86,12 @@ exports.getEvents = async (query) => {
 exports.getOneEvent = async (id) => {
   try {
     const eventId = id.replace(':','');
-    console.log('getOneEvent id',id);
-    console.log('getOneEvent eventId',eventId)
+    console.log('getOneEvent for id',id);
 
-    const response = await Event.findById(id).populate('designs', 'imageUrl title selectedCount status'); ;
+    const response = await Event.findById(id).populate('designs', 'imageUrl title selectedCount status maxSelections'); ;
     console.log(response);
     if(!response) {
-      throw {statusCode: 404, message:'Event not found. Please ensure id is valid!'}
+      throw new AppError('Event not found', 400);
     }
     return response;
   } catch (error) {
@@ -111,28 +111,19 @@ exports.updateEventDesign = async (eventId,data) => {
 
 exports.updateEvent = async (eventId, body) => {
   try {
-    const id = eventId.replace(':', ''); // formatting eventId
 
     const fieldsToUpdate = {...body};
-
-    // If designs are present, parse them to ObjectId instances
-    if (fieldsToUpdate.designs) {
-      const parsedDesigns = JSON.parse(fieldsToUpdate.designs);
-      fieldsToUpdate.designs = parsedDesigns.map((id) => new mongoose.Types.ObjectId(id));
-    }
-    const validatedFields = validateUpdateEventFields(fieldsToUpdate)
-    console.log('Validation success:', fieldsToUpdate);
-
-    // Update the event in the database
-    const updatedEvent = await Event.findByIdAndUpdate(id, { $set: validatedFields }, { new: true });
-
+    console.log('fieldsToUpdate',fieldsToUpdate)
+    console.log('Update event id:', eventId);
+    const updatedEvent = await Event.findByIdAndUpdate(eventId, { $set: fieldsToUpdate }, { new: true });
+    console.log('Update Event Success')
+    
     if (!updatedEvent) {
-      throw { message: 'Event not found', statusCode: 404 };
+      throw new AppError('Event not found', 400);
     }
-
-    return { updatedEvent };
+    return updatedEvent;
   } catch (error) {
-    console.error('Error caught at updateEvent!');
+    console.error('Error caught at updateEvent service !');
     throw error;
   }
 };
@@ -158,6 +149,7 @@ exports.getUpcomingEventsWithRandomDesign = async (fromDate = new Date()) => {
     const events = await Event.aggregate([
       {
         $match: {
+          available : true,
           eventDate: { $gte: fromDate }, // Events from current date onwards
           designs: { $exists: true, $ne: [] }, // Ensure designs array exists and is not empty
         },
@@ -179,7 +171,7 @@ exports.getUpcomingEventsWithRandomDesign = async (fromDate = new Date()) => {
               cond: {
                 $and: [
                   { $eq: ['$$design.status', 'available'] }, // Design status is 'available'
-                  { $lt: ['$$design.selectedCount', 15] },   // selectedCount < 15
+                  { $lt: ['$$design.selectedCount', '$$design.maxSelections'] },   // selectedCount < 15
                 ],
               },
             },
