@@ -7,6 +7,7 @@ const UserSchema = new mongoose.Schema({
   selectedPackage: { type: String, default: 'free' }, // 'free', 'basic', 'premium'
   paymentStatus: { type: Boolean, default: false },  // Active subscription or not
   registrationDate: { type: Date, default: Date.now ,  immutable: true },
+  price : { type: Number, default: 0},
   access: { type: String, default: 'user' }, // 'user', 'admin' , 'designer'
 });
 

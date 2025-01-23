@@ -1,6 +1,7 @@
 // services/subscriptionService.js
 const User = require('../models/Users');
 const packages = require('../config/packages');
+const AppError = require('../customExceptions/AppError');
 
 // Select Package
 exports.selectPackage = async (userId, packageName) => {
@@ -68,3 +69,18 @@ exports.verifyPayment = async (userId, packageName) => {
     user,
   };
 };
+
+
+// find the price of the package from users
+
+exports.findPackagePrice = async (userId) => {
+  // only the package price is needed
+
+  const userPrice = await User.findById(userId, { price: 1 });
+
+  if (!userPrice) {
+    throw new AppError('User or package not found ', 400);
+  }
+
+  return userPrice;
+}

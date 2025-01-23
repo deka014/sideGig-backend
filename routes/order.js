@@ -5,6 +5,8 @@ const router = express.Router();
 const { createOrder } = require('../services/orderService');
 const { verifyToken } = require('../middleware/authMiddleware');
 const { placeOrder,getUserOrders,viewOrder} = require('../services/orderService');
+const AppError = require('../customExceptions/AppError');
+const { findPackagePrice } = require('../services/subscriptionService');
 
 // deprecated route - dont use
 
@@ -46,16 +48,17 @@ router.post('/create-order', verifyToken, async (req, res) => {
 
 
 // Place Order Route
-router.post('/place-order', verifyToken, async (req, res) => {
+router.post('/place-order', verifyToken, async (req, res,next) => {
   try {
     const {userId} = req.user // Extract user ID from the JWT token
-    console.log('Request userId:', userId);
-    const { selectedDesigns, price, additionalInfo } = req.body;
-
+    console.log("Placing order for user:", userId);
+    const { selectedDesigns, additionalInfo } = req.body;
     if (!selectedDesigns || selectedDesigns.length === 0) {
-      return res.status(400).json({ message: 'No designs selected for the order' });
+      throw new AppError('Selected designs are required', 400);
     }
-
+    const response = await findPackagePrice(userId);
+    const price = response.price;
+    console.log("Price of package for user:", price);
     const order = await placeOrder(userId, selectedDesigns, price, additionalInfo);
 
     res.status(201).json({
@@ -63,8 +66,7 @@ router.post('/place-order', verifyToken, async (req, res) => {
       order,
     });
   } catch (error) {
-    console.error('Error placing order:', error);
-    res.status(500).json({ message: 'Internal Server Error' });
+    next(error);
   }
 });
 

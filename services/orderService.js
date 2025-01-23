@@ -3,7 +3,9 @@
 const ContentSubmission = require('../models/ContentSubmission');
 const Order = require('../models/Orders');
 const Design = require('../models/Design');
+const User = require('../models/Users');
 const mongoose = require('mongoose');
+const AppError = require('../customExceptions/AppError');
 
 exports.createOrder = async (userId, assignee, selectedCreative) => {
   try {
@@ -69,6 +71,11 @@ exports.placeOrder = async (userId, selectedDesigns, price, additionalInfo) => {
   try {
     // Validate All Design IDs
     const designs = await Design.find({ _id: { $in: selectedDesigns } });
+    const user = await User.findById(userId);
+
+    if(!user) {
+      throw new AppError('User not found', 400);
+    }
 
     if (designs.length !== selectedDesigns.length) {
       throw new Error('One or more design IDs are invalid or do not exist.');
@@ -103,11 +110,23 @@ exports.placeOrder = async (userId, selectedDesigns, price, additionalInfo) => {
       selectedDesigns: updatedDesigns,
       price,
       additionalInfo,
-      estimatedDeliveryDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), // 7 days from now
+      estimatedDeliveryDate: new Date(Date.now() + 1 * 24 * 60 * 60 * 1000), // 1 days from now
     });
 
     const savedOrder = await newOrder.save();
+
     console.log('Order saved:', savedOrder);
+
+    // mark user payment status as false 
+
+    user.paymentStatus = false;
+    user.selectedPackage = 'free';
+    user.price = 0;
+
+    const savedUser = await user.save();
+
+    console.log('User saved:', savedUser); 
+    
 
     //trim the savedOrder object to return only the necessary fields
     const orderDTO = {
@@ -115,9 +134,10 @@ exports.placeOrder = async (userId, selectedDesigns, price, additionalInfo) => {
       orderId: savedOrder.orderId,
       userId: savedOrder.userId,
       estimatedDeliveryDate: savedOrder.estimatedDeliveryDate,
-
+      price: savedOrder.price,
+      additionalInfo: savedOrder.additionalInfo,
     };
-
+    
     return orderDTO;
   } catch (error) {
     console.error('Error in placeOrder service:', error);
