@@ -30,6 +30,15 @@ const EventSchema = new mongoose.Schema({
     type: Boolean,
     default: true,
   },
+  // the caption for the event will be in an array
+  captions: [
+    {
+      type: String,
+    }
+  ],
+  hashtag: {
+    type : String
+  }
 });
 
 module.exports = mongoose.model('Event', EventSchema);

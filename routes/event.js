@@ -1,10 +1,11 @@
 const express = require('express');
 const router = express.Router();
 const authService = require('../services/authService');
-const { createEvent, updateEvent, getEvents, getOneEvent, updateEventDesign } = require('../services/eventService');
+const { createEvent, updateEvent, getEvents, getOneEvent, updateEventDesign , updateEventCaption} = require('../services/eventService');
 const { getUpcomingEventsWithRandomDesign } = require('../services/eventService');
 const { verifyToken,verifyAdmin } = require('../middleware/authMiddleware');
 const checkUserPaymentStatus = require('../middleware/checkUserPaymentStatus');
+const AppError = require('../customExceptions/AppError');
 
 router.post('/events',verifyToken, verifyAdmin, async (req,res) => {
   try {
@@ -93,6 +94,29 @@ router.patch('/event/:eventId', verifyToken , verifyAdmin , async (req, res, nex
     const { eventId } = req.params;
     const response = await updateEvent(eventId, req.body);
     res.status(200).json(response);
+  } catch (error) {
+    next(error);
+  }
+});
+
+
+router.patch('/event/:eventId/addCaption', verifyToken, verifyAdmin, async (req, res,next) => {
+  try {
+    const { eventId } = req.params;
+
+    console.log('req.body', req.body);
+    
+    // Ensure captions are provided in the request body
+    const { caption } = req.body;
+
+    if (!caption || caption === '') {
+      throw new AppError('Caption is required', 400);
+    }
+
+    // Call the service function to update the event
+    const response = await updateEventCaption(eventId, caption);
+
+    res.status(200).json({ success: true, response });
   } catch (error) {
     next(error);
   }

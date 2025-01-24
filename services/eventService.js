@@ -89,7 +89,7 @@ exports.getOneEvent = async (id) => {
     console.log('getOneEvent for id',id);
 
     const response = await Event.findById(id).populate('designs', 'imageUrl title selectedCount status maxSelections'); ;
-    console.log(response);
+
     if(!response) {
       throw new AppError('Event not found', 400);
     }
@@ -243,4 +243,23 @@ exports.getUpcomingEventsWithRandomDesign = async (fromDate = new Date()) => {
     .filter(Boolean); // Remove null entries
 
   return eventsWithRandomDesigns;
+};
+
+
+exports.updateEventCaption = async (eventId, caption) => {
+  try {
+    // Find the event by ID and update the caption string
+    const event = await Event.findByIdAndUpdate(
+      eventId,
+      { $push: { captions: caption } }, // Add the caption to the captions array
+      { new: true } // Return the updated document
+    );
+
+    if (!event) {
+      throw new AppError('Event not found', 400);
+    }
+    return event;
+  } catch (error) {
+    throw error;
+  }
 };
