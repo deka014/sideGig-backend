@@ -1,6 +1,7 @@
 const mongoose = require('mongoose');
 const Order = require('../models/Orders');
 const ContentSubmission = require('../models/ContentSubmission');
+const AppError = require('../customExceptions/AppError');
 
 exports.getPendingOrdersForDesigner = async (designerId) => {
   try {
@@ -74,9 +75,8 @@ exports.getAssignedOrderWithLatestContentSubmission = async (orderId, designerId
   try {
     // Validate orderId
     if (!mongoose.Types.ObjectId.isValid(orderId)) {
-      throw new Error('Invalid Order ID');
+      throw new AppError('Invalid order ID', 400);
     }
-
     // Build the query condition
     const query = { _id: orderId }; // Always filter by orderId
     if (!isAdmin) {
@@ -85,6 +85,8 @@ exports.getAssignedOrderWithLatestContentSubmission = async (orderId, designerId
     }
 
     // Fetch the order
+    console.log('fetching order with query:', query);
+    console.log('fetching orders');
     const order = await Order.findOne(query)
       .select('orderId userId selectedDesigns createdAt estimatedDeliveryDate status orderPreviewUrl')
       .populate({
@@ -92,13 +94,14 @@ exports.getAssignedOrderWithLatestContentSubmission = async (orderId, designerId
         select: 'title imageUrl description',
       })
       .lean();
-
+    console.log('orders fetched');
     // Check if the order exists
     if (!order) {
       return null; // Return null if the order is not found or the designer is not assigned
     }
 
     // Fetch the latest Content Submission based on the userId
+    console.log('fetching content submission');
     const contentSubmission = await ContentSubmission.findOne({ userId: order.userId })
       .sort({ createdAt: -1 }) // Sort by `createdAt` in descending order
       .select('name title logo photo facebook instagram thread xlink website selectedPreviews createdAt');
@@ -109,8 +112,7 @@ exports.getAssignedOrderWithLatestContentSubmission = async (orderId, designerId
       contentSubmission: contentSubmission || null, // Attach the latest content submission or null if not found
     };
   } catch (error) {
-    console.error('Error fetching assigned order with latest content submission:', error);
-    throw new Error('Failed to fetch order details.');
+    throw error ;
   }
 };
 

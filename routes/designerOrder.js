@@ -67,10 +67,11 @@ router.get('/completed-orders', verifyToken, verifyDesigner, async (req, res) =>
 });
 
 // route for designer to get order details
-router.get('/order/:orderId', verifyToken, verifyDesigner, async (req, res) => {
+router.get('/order/:orderId', verifyToken, verifyDesigner, async (req, res,next) => {
   try {
     const {userId} = req.user; // Extract designer ID from JWT
     const { orderId } = req.params;
+    console.log('fetching order for designer with order id :', orderId);
     const id = orderId.replace(':','');
     let isAdmin = false;
 
@@ -86,8 +87,7 @@ router.get('/order/:orderId', verifyToken, verifyDesigner, async (req, res) => {
 
     res.status(200).json(order);
   } catch (error) {
-    console.error('Error fetching order details:', error);
-    res.status(500).json({ message: 'Failed to fetch order details.' });
+    next(error);
   }
 });
 
