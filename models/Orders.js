@@ -77,7 +77,7 @@ const OrderSchema = new mongoose.Schema({
     ref: 'User',
     default: null,
   },
-  package : {
+  selectedPackage : {
     type: String,
     default: null
   }

@@ -113,6 +113,7 @@ exports.placeOrder = async (userId, selectedDesignsWithCaptionAndHashtags, addit
       userId,
       selectedDesigns: updatedDesigns,
       price : user.price,
+      selectedPackage : user.selectedPackage,
       additionalInfo,
       estimatedDeliveryDate: new Date(Date.now() + 1 * 24 * 60 * 60 * 1000), // 1 days from now
     });
