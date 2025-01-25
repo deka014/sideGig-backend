@@ -11,6 +11,14 @@ const OrderSchema = new mongoose.Schema({
   },
   selectedDesigns: [
     {
+      eventTitle: {
+        type: String, // Title of the event
+        required: true,
+      },
+      eventDate : {
+        type: Date,
+        required: true
+      },
       designId: {
         type: mongoose.Schema.Types.ObjectId,
         // ref: 'Design', // Reference to the Design schema
@@ -27,16 +35,7 @@ const OrderSchema = new mongoose.Schema({
       deliverUrl: {
         type: String, // Personalized delivery URL for the design if required
         default: null,
-      },
-      status: {
-        type: String,
-        enum: ['Processing', 'Completed' , 'cancelled', null], // Delivery status for the design
-        default: null,
-      },
-      deliveredDate: {
-        type: Date, // Date when the design was delivered
-        default: null,
-      },
+      },     
       caption : {
         type: String,
         default: null

@@ -100,7 +100,9 @@ exports.placeOrder = async (userId, selectedDesignsWithCaptionAndHashtags, addit
         designImage: design.imageUrl,
         owner : design.owner,
         caption : selectedDesignsWithCaptionAndHashtags[design._id][0],
-        hashtag : selectedDesignsWithCaptionAndHashtags[design._id][1]
+        hashtag : selectedDesignsWithCaptionAndHashtags[design._id][1],
+        eventTitle : selectedDesignsWithCaptionAndHashtags[design._id][2],
+        eventDate : selectedDesignsWithCaptionAndHashtags[design._id][3],
       });
     }
 
@@ -191,6 +193,18 @@ exports.viewOrder = async (orderId, userId, isAdmin) => {
     if (!order) {
       throw new Error('Order not found or access denied');
     }
+
+    // if order selected package is free then caption and hashtag will be null
+    // if(order.selectedPackage === 'free' || order.selectedPackage === 'growth') {
+    //   order.selectedDesigns.forEach(design => {
+    //     design.caption = null;
+    //     design.hashtag = null;
+    //   });
+    // }else if (order.selectedPackage === 'pro') {
+    //   order.selectedDesigns.forEach(design => {
+    //     design.hashtag = null;
+    //   });
+    // }
 
     return order;
   } catch (error) {
