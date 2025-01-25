@@ -10,7 +10,7 @@ const checkUserPaymentStatus = require("../middleware/checkUserPaymentStatus");
 const router = express.Router();
 
 // Ensure the 'uploads' folder exists
-const uploadFolder = path.join(__dirname,'..', 'uploads');
+const uploadFolder = path.join('/tmp', 'uploads');
 if (!fs.existsSync(uploadFolder)) {
   fs.mkdirSync(uploadFolder);
   console.log('Uploads folder created');

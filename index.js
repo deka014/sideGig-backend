@@ -13,6 +13,7 @@ const designerOrder = require('./routes/designerOrder')
 const admin = require('./routes/admin')
 const errorHandler = require('./middleware/errorHandlerMiddleware');
 var cors = require('cors')
+const serverless = require('serverless-http');
 
 
  
@@ -56,3 +57,6 @@ const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
 });
+
+
+// module.exports.handler = serverless(app);
