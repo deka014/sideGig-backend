@@ -56,10 +56,10 @@ router.post('/place-order', verifyToken, async (req, res,next) => {
     if (!selectedDesigns || selectedDesigns.length === 0) {
       throw new AppError('Selected designs are required', 400);
     }
-    const response = await findPackagePrice(userId);
-    const price = response.price;
-    console.log("Price of package for user:", price);
-    const order = await placeOrder(userId, selectedDesigns, price, additionalInfo);
+    // const response = await findPackagePrice(userId);
+    // const price = response.price;
+    // console.log("Price of package for user:", price);
+    const order = await placeOrder(userId, selectedDesigns, additionalInfo);
 
     res.status(201).json({
       message: 'Order placed successfully',

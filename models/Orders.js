@@ -37,6 +37,15 @@ const OrderSchema = new mongoose.Schema({
         type: Date, // Date when the design was delivered
         default: null,
       },
+      caption : {
+        type: String,
+        default: null
+      }
+      , // Caption for the design
+      hashtag : {
+        type: String,
+        default: null
+      } // Hashtag for the design
     },
   ],
   price: {
@@ -68,6 +77,10 @@ const OrderSchema = new mongoose.Schema({
     ref: 'User',
     default: null,
   },
+  package : {
+    type: String,
+    default: null
+  }
 });
 
 module.exports = mongoose.model('Order', OrderSchema);

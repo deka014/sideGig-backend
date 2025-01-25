@@ -67,9 +67,11 @@ const generateReadableOrderId = () => {
   return `ORD-${timestamp}-${randomId}`;
 };
 
-exports.placeOrder = async (userId, selectedDesigns, price, additionalInfo) => {
+exports.placeOrder = async (userId, selectedDesignsWithCaptionAndHashtags, additionalInfo) => {
   try {
     // Validate All Design IDs
+    // Extract the keys from the selectedDesigns object as arrays
+    const selectedDesigns = Object.keys(selectedDesignsWithCaptionAndHashtags);
     const designs = await Design.find({ _id: { $in: selectedDesigns } });
     const user = await User.findById(userId);
 
@@ -96,7 +98,9 @@ exports.placeOrder = async (userId, selectedDesigns, price, additionalInfo) => {
       updatedDesigns.push({
         designId: design._id,
         designImage: design.imageUrl,
-        owner : design.owner
+        owner : design.owner,
+        caption : selectedDesignsWithCaptionAndHashtags[design._id][0],
+        hashtag : selectedDesignsWithCaptionAndHashtags[design._id][1]
       });
     }
 
@@ -108,7 +112,7 @@ exports.placeOrder = async (userId, selectedDesigns, price, additionalInfo) => {
       orderId,
       userId,
       selectedDesigns: updatedDesigns,
-      price,
+      price : user.price,
       additionalInfo,
       estimatedDeliveryDate: new Date(Date.now() + 1 * 24 * 60 * 60 * 1000), // 1 days from now
     });

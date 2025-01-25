@@ -196,6 +196,8 @@ exports.getUpcomingEventsWithRandomDesign = async (fromDate = new Date()) => {
           title: 1,
           description: 1,
           eventDate: 1,
+          captions: 1,
+          hashtag: 1,
           filteredDesigns: {
             _id: 1,
             title: 1,
@@ -232,6 +234,8 @@ exports.getUpcomingEventsWithRandomDesign = async (fromDate = new Date()) => {
         title: event.title,
         description: event.description,
         eventDate: event.eventDate,
+        hashtag : event.hashtag? event.hashtag : null,
+        caption: event.captions? event.captions[Math.floor(Math.random() * event.captions.length)] : null, // Select a random caption
         randomDesign: {
           id: randomDesign._id,
           title: randomDesign.title,
